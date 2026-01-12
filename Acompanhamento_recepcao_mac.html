@@ -241,6 +241,36 @@
       font-size: 16px;
     }
 
+    /* Sort button */
+    .sort-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      color: #424242;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .sort-button:hover {
+      background: #eeeeee;
+      border-color: #bdbdbd;
+    }
+
+    .sort-button:active {
+      background: #e0e0e0;
+    }
+
+    .sort-button .material-icons {
+      font-size: 18px;
+    }
+
     /* Legend */
     .legend {
       background: #ffffff;
@@ -304,7 +334,7 @@
       </div>
       <div class="last-update">
         <span class="material-icons">schedule</span>
-        <span>Atualizado em <span class="update-time">12/01/2026 às 13:30</span></span>
+        <span>Atualizado em <span class="update-time">12/01/2026 às 13:53</span></span>
       </div>
     </header>
 
@@ -338,6 +368,11 @@
         <span style="color: #757575;">até</span>
         <input type="date" id="date-end" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-family: 'Roboto', sans-serif; font-size: 14px;">
       </div>
+
+      <button id="sort-button" class="sort-button">
+        <span class="material-icons">arrow_downward</span>
+        <span>Mais recentes</span>
+      </button>
 
       <div class="stats">
         <div class="stat-card">
@@ -665,16 +700,19 @@
         row.appendChild(statusCell);
       });
 
-      // Controles de filtro
+      // Controles de filtro e ordenação
       var cityFilter = document.getElementById("city-filter");
       var statusFilter = document.getElementById("status-filter");
       var dateFilter = document.getElementById("date-filter");
       var customDateRange = document.getElementById("custom-date-range");
       var dateStart = document.getElementById("date-start");
       var dateEnd = document.getElementById("date-end");
+      var sortButton = document.getElementById("sort-button");
       var totalCount = document.getElementById("total-count");
       var readyCount = document.getElementById("ready-count");
       var pendingCount = document.getElementById("pending-count");
+
+      var sortDescending = true; // Padrão: mais recentes primeiro
 
       // Função para converter data brasileira para objeto Date
       function parseDate(dateStr) {
@@ -740,6 +778,29 @@
         pendingCount.textContent = pending;
       }
 
+      function sortRows() {
+        var tbody = table.querySelector("tbody");
+        var sortedRows = rows.slice().sort(function (a, b) {
+          var dateA = parseDate(a.getAttribute("data-date"));
+          var dateB = parseDate(b.getAttribute("data-date"));
+
+          if (!dateA && !dateB) return 0;
+          if (!dateA) return 1;
+          if (!dateB) return -1;
+
+          if (sortDescending) {
+            return dateB - dateA; // Mais recentes primeiro
+          } else {
+            return dateA - dateB; // Mais antigas primeiro
+          }
+        });
+
+        // Reordenar linhas no DOM
+        sortedRows.forEach(function (row) {
+          tbody.appendChild(row);
+        });
+      }
+
       function applyFilters() {
         var cityValue = cityFilter.value;
         var statusValue = statusFilter.value;
@@ -778,12 +839,27 @@
         applyFilters();
       });
 
+      // Botão de ordenação
+      sortButton.addEventListener("click", function() {
+        sortDescending = !sortDescending;
+
+        if (sortDescending) {
+          sortButton.innerHTML = '<span class="material-icons">arrow_downward</span><span>Mais recentes</span>';
+        } else {
+          sortButton.innerHTML = '<span class="material-icons">arrow_upward</span><span>Mais antigas</span>';
+        }
+
+        sortRows();
+      });
+
       cityFilter.addEventListener("change", applyFilters);
       statusFilter.addEventListener("change", applyFilters);
       dateFilter.addEventListener("change", applyFilters);
       dateStart.addEventListener("change", applyFilters);
       dateEnd.addEventListener("change", applyFilters);
 
+      // Ordenar por data ao carregar (mais recentes primeiro)
+      sortRows();
       applyFilters();
     })();
   </script>
