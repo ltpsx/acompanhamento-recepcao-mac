@@ -296,6 +296,44 @@ html = f"""<!doctype html>
       flex-wrap: wrap;
     }}
 
+    .search-box {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 250px;
+      max-width: 400px;
+      position: relative;
+    }}
+
+    .search-box .material-icons {{
+      position: absolute;
+      left: 12px;
+      color: #757575;
+      font-size: 20px;
+    }}
+
+    .search-box input {{
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border: 1px solid #e0e0e0;
+      border-radius: 24px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      color: #212121;
+      transition: all 0.2s;
+    }}
+
+    .search-box input:focus {{
+      outline: none;
+      border-color: #424242;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }}
+
+    .search-box input::placeholder {{
+      color: #9e9e9e;
+    }}
+
     .controls label {{
       font-weight: 500;
       color: #424242;
@@ -576,6 +614,11 @@ html = f"""<!doctype html>
     </header>
 
     <div class=\"controls\">
+      <div class=\"search-box\">
+        <span class=\"material-icons\">search</span>
+        <input type=\"text\" id=\"search-input\" placeholder=\"Buscar por fornecedor...\">
+      </div>
+
       <label for=\"city-filter\">Cidade:</label>
       <select id=\"city-filter\">
         <option value=\"ALL\">Todas</option>
@@ -671,6 +714,7 @@ html = f"""<!doctype html>
       var finIndex = -1;
       var libIndex = -1;
       var dataConfIndex = -1;
+      var fornecedorIndex = -1;
 
       headers.forEach(function (th, idx) {{
         var text = th.textContent.trim().toUpperCase();
@@ -678,6 +722,7 @@ html = f"""<!doctype html>
         if (text === "FIN.") finIndex = idx;
         if (text === "LIB.") libIndex = idx;
         if (text === "DATA CONF.") dataConfIndex = idx;
+        if (text === "NOME DO FORNECEDOR") fornecedorIndex = idx;
       }});
 
       if (cityIndex === -1) return;
@@ -706,10 +751,12 @@ html = f"""<!doctype html>
         var lib = (cells[libIndex]?.textContent || "").trim();
         var dateText = (cells[dataIndex]?.textContent || "").trim();
         var dataConfText = (cells[dataConfIndex]?.textContent || "").trim();
+        var fornecedor = (cells[fornecedorIndex]?.textContent || "").trim();
 
         // Adicionar atributos para filtros
         row.setAttribute("data-city", city);
         row.setAttribute("data-date", dateText);
+        row.setAttribute("data-fornecedor", fornecedor.toUpperCase());
 
         // Verificar se está pronta ANTES de calcular dias
         var isReady = fin !== "" && lib !== "";
@@ -774,6 +821,7 @@ html = f"""<!doctype html>
       }});
 
       // Controles de filtro e ordenação
+      var searchInput = document.getElementById("search-input");
       var cityFilter = document.getElementById("city-filter");
       var statusFilter = document.getElementById("status-filter");
       var dateFilter = document.getElementById("date-filter");
@@ -896,6 +944,7 @@ html = f"""<!doctype html>
       }}
 
       function applyFilters() {{
+        var searchValue = searchInput.value.toUpperCase();
         var cityValue = cityFilter.value;
         var statusValue = statusFilter.value;
         var dateValue = dateFilter.value;
@@ -906,14 +955,16 @@ html = f"""<!doctype html>
           var city = row.getAttribute("data-city");
           var ready = row.getAttribute("data-ready");
           var dateText = row.getAttribute("data-date");
+          var fornecedor = row.getAttribute("data-fornecedor");
 
+          var searchMatch = searchValue === "" || fornecedor.indexOf(searchValue) !== -1;
           var cityMatch = cityValue === "ALL" || city === cityValue;
           var statusMatch = statusValue === "ALL" ||
                            (statusValue === "READY" && ready === "true") ||
                            (statusValue === "PENDING" && ready === "false");
           var dateMatch = isDateInRange(dateText, dateValue, startDate, endDate);
 
-          if (cityMatch && statusMatch && dateMatch) {{
+          if (searchMatch && cityMatch && statusMatch && dateMatch) {{
             row.style.display = "";
           }} else {{
             row.style.display = "none";
@@ -959,6 +1010,7 @@ html = f"""<!doctype html>
         sortByDays();
       }});
 
+      searchInput.addEventListener("input", applyFilters);
       cityFilter.addEventListener("change", applyFilters);
       statusFilter.addEventListener("change", applyFilters);
       dateFilter.addEventListener("change", applyFilters);
