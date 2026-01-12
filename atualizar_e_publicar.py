@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Script de automação para atualizar e publicar o acompanhamento MAC
 Pode ser executado manualmente ou via n8n/cron
@@ -6,8 +7,12 @@ Pode ser executado manualmente ou via n8n/cron
 
 import subprocess
 import sys
+import io
 from datetime import datetime
 from pathlib import Path
+
+# Configurar stdout para UTF-8
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 # Configurações
 REPO_DIR = Path(__file__).parent
@@ -52,14 +57,15 @@ def main():
         log("Erro ao gerar HTML. Abortando.")
         sys.exit(1)
 
-    # 2. Verificar se há mudanças
+    # 2. Verificar se o HTML tem mudanças
     success, status = run_command(
-        "git status --porcelain",
-        "Verificando mudanças"
+        f"git diff --exit-code {HTML_FILE}",
+        "Verificando mudanças no HTML"
     )
 
-    if not status.strip():
-        log("Nenhuma mudança detectada. Nada a fazer.")
+    # Se exit code = 0, não há mudanças
+    if success:
+        log("Nenhuma mudança detectada no HTML. Nada a fazer.")
         sys.exit(0)
 
     # 3. Adicionar arquivos ao git
