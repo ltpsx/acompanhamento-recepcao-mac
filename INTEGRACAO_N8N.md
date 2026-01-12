@@ -56,14 +56,16 @@ docker run -it --rm --name n8n -p 5678:5678 n8nio/n8n
 
 #### 1. Schedule Trigger (Agendador)
 
-**Configuração padrão:** A cada 2 horas
+**Configuração padrão:** A cada 30 minutos
 ```cron
-0 */2 * * *
+*/30 * * * *
 ```
 
 **Outras opções:**
+- A cada 15 minutos: `*/15 * * * *`
+- A cada hora: `0 * * * *`
+- A cada 2 horas: `0 */2 * * *`
 - Diariamente às 8h: `0 8 * * *`
-- A cada 6 horas: `0 */6 * * *`
 - Segunda a Sexta às 9h e 17h: `0 9,17 * * 1-5`
 
 #### 2. Execute Python Script

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python gerar_acompanhamento.py:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nImplementar sistema de acompanhamento de recepção MAC\n\n- Redesenhar interface com Material Design 3\n- Adicionar cores por cidade \\(Araçatuba: azul, Prudente: verde, Birigui: laranja\\)\n- Implementar filtro funcional por cidade\n- Adicionar indicador visual de status \\(Pronta/Pendente\\)\n- Adicionar estatísticas em tempo real \\(Total, Prontas, Pendentes\\)\n- Criar legenda de cores\n- Melhorar responsividade para mobile\n- Adicionar documentação completa no README\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git commit:*)",
+      "Bash(python atualizar_e_publicar.py:*)"
+    ]
+  }
+}

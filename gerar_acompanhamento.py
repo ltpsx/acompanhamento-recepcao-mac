@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+import re
 
 FILES = {
     "Mac Araçatuba Recepção e Conferência.xlsx": "Araçatuba",
@@ -27,8 +28,68 @@ def find_col(columns, targets):
     return None
 
 
-def extract_table(path, city):
-    df = pd.read_excel(path, sheet_name=-1, header=None)
+def is_valid_sheet(sheet_name):
+    """
+    Verifica se a guia é de Janeiro/2026 em diante.
+    Aceita formatos: jan/26, janeiro/26, jan-26, jan 26, 01/26, etc.
+    """
+    if not sheet_name:
+        return False
+
+    sheet_lower = str(sheet_name).lower().strip()
+
+    # Mapeamento de meses
+    months = {
+        'jan': 1, 'janeiro': 1,
+        'fev': 2, 'fevereiro': 2,
+        'mar': 3, 'março': 3, 'marco': 3,
+        'abr': 4, 'abril': 4,
+        'mai': 5, 'maio': 5,
+        'jun': 6, 'junho': 6,
+        'jul': 7, 'julho': 7,
+        'ago': 8, 'agosto': 8,
+        'set': 9, 'setembro': 9,
+        'out': 10, 'outubro': 10,
+        'nov': 11, 'novembro': 11,
+        'dez': 12, 'dezembro': 12
+    }
+
+    # Padrão: texto/número ou número/número
+    pattern = r'([a-záàâãéèêíïóôõöúçñ]+|[0-9]{1,2})[\s/\-]+([0-9]{2,4})'
+    match = re.search(pattern, sheet_lower)
+
+    if match:
+        month_str = match.group(1)
+        year_str = match.group(2)
+
+        # Converter ano para 4 dígitos
+        year = int(year_str)
+        if year < 100:
+            year = 2000 + year
+
+        # Se for texto, buscar no dicionário
+        if month_str.isalpha():
+            month = months.get(month_str)
+            if not month:
+                return False
+        else:
+            month = int(month_str)
+
+        # Validar mês
+        if month < 1 or month > 12:
+            return False
+
+        # Verificar se é >= Jan/2026
+        if year > 2026:
+            return True
+        elif year == 2026 and month >= 1:
+            return True
+
+    return False
+
+
+def extract_table(path, city, sheet_name):
+    df = pd.read_excel(path, sheet_name=sheet_name, header=None)
     header_idx = None
     max_scan = min(len(df), 25)
     for i in range(max_scan):
@@ -95,7 +156,23 @@ def format_date(series):
 
 frames = []
 for file_name, city in FILES.items():
-    frames.append(extract_table(file_name, city))
+    # Obter todas as guias do arquivo
+    xls = pd.ExcelFile(file_name)
+    sheet_names = xls.sheet_names
+
+    valid_sheets = [s for s in sheet_names if is_valid_sheet(s)]
+
+    if not valid_sheets:
+        print(f"AVISO: Nenhuma guia válida (>=Jan/2026) encontrada em {file_name}")
+        continue
+
+    print(f"Processando {file_name}: {len(valid_sheets)} guia(s) válida(s): {', '.join(valid_sheets)}")
+
+    for sheet_name in valid_sheets:
+        try:
+            frames.append(extract_table(file_name, city, sheet_name))
+        except Exception as e:
+            print(f"Erro ao processar guia '{sheet_name}' em {file_name}: {e}")
 
 result = pd.concat(frames, ignore_index=True)
 
@@ -371,6 +448,36 @@ html = f"""<!doctype html>
       font-size: 16px;
     }}
 
+    /* Sort button */
+    .sort-button {{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      color: #424242;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Roboto', sans-serif;
+    }}
+
+    .sort-button:hover {{
+      background: #eeeeee;
+      border-color: #bdbdbd;
+    }}
+
+    .sort-button:active {{
+      background: #e0e0e0;
+    }}
+
+    .sort-button .material-icons {{
+      font-size: 18px;
+    }}
+
     /* Legend */
     .legend {{
       background: #ffffff;
@@ -466,6 +573,11 @@ html = f"""<!doctype html>
         <span style=\"color: #757575;\">até</span>
         <input type=\"date\" id=\"date-end\" style=\"padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-family: 'Roboto', sans-serif; font-size: 14px;\">
       </div>
+
+      <button id=\"sort-button\" class=\"sort-button\">
+        <span class=\"material-icons\">arrow_downward</span>
+        <span>Mais recentes</span>
+      </button>
 
       <div class=\"stats\">
         <div class=\"stat-card\">
@@ -572,16 +684,19 @@ html = f"""<!doctype html>
         row.appendChild(statusCell);
       }});
 
-      // Controles de filtro
+      // Controles de filtro e ordenação
       var cityFilter = document.getElementById("city-filter");
       var statusFilter = document.getElementById("status-filter");
       var dateFilter = document.getElementById("date-filter");
       var customDateRange = document.getElementById("custom-date-range");
       var dateStart = document.getElementById("date-start");
       var dateEnd = document.getElementById("date-end");
+      var sortButton = document.getElementById("sort-button");
       var totalCount = document.getElementById("total-count");
       var readyCount = document.getElementById("ready-count");
       var pendingCount = document.getElementById("pending-count");
+
+      var sortDescending = true; // Padrão: mais recentes primeiro
 
       // Função para converter data brasileira para objeto Date
       function parseDate(dateStr) {{
@@ -647,6 +762,29 @@ html = f"""<!doctype html>
         pendingCount.textContent = pending;
       }}
 
+      function sortRows() {{
+        var tbody = table.querySelector("tbody");
+        var sortedRows = rows.slice().sort(function (a, b) {{
+          var dateA = parseDate(a.getAttribute("data-date"));
+          var dateB = parseDate(b.getAttribute("data-date"));
+
+          if (!dateA && !dateB) return 0;
+          if (!dateA) return 1;
+          if (!dateB) return -1;
+
+          if (sortDescending) {{
+            return dateB - dateA; // Mais recentes primeiro
+          }} else {{
+            return dateA - dateB; // Mais antigas primeiro
+          }}
+        }});
+
+        // Reordenar linhas no DOM
+        sortedRows.forEach(function (row) {{
+          tbody.appendChild(row);
+        }});
+      }}
+
       function applyFilters() {{
         var cityValue = cityFilter.value;
         var statusValue = statusFilter.value;
@@ -685,12 +823,27 @@ html = f"""<!doctype html>
         applyFilters();
       }});
 
+      // Botão de ordenação
+      sortButton.addEventListener("click", function() {{
+        sortDescending = !sortDescending;
+
+        if (sortDescending) {{
+          sortButton.innerHTML = '<span class=\"material-icons\">arrow_downward</span><span>Mais recentes</span>';
+        }} else {{
+          sortButton.innerHTML = '<span class=\"material-icons\">arrow_upward</span><span>Mais antigas</span>';
+        }}
+
+        sortRows();
+      }});
+
       cityFilter.addEventListener("change", applyFilters);
       statusFilter.addEventListener("change", applyFilters);
       dateFilter.addEventListener("change", applyFilters);
       dateStart.addEventListener("change", applyFilters);
       dateEnd.addEventListener("change", applyFilters);
 
+      // Ordenar por data ao carregar (mais recentes primeiro)
+      sortRows();
       applyFilters();
     }})();
   </script>
