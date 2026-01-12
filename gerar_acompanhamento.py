@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+from datetime import datetime
 
 FILES = {
     "Mac Araçatuba Recepção e Conferência.xlsx": "Araçatuba",
@@ -161,6 +162,15 @@ html = f"""<!doctype html>
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }}
+
+    .header-content {{
+      flex: 1;
     }}
 
     h1 {{
@@ -173,6 +183,25 @@ html = f"""<!doctype html>
     .subtitle {{
       color: #757575;
       font-size: 14px;
+    }}
+
+    .last-update {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #757575;
+      font-size: 13px;
+      white-space: nowrap;
+    }}
+
+    .last-update .material-icons {{
+      font-size: 18px;
+      color: #9e9e9e;
+    }}
+
+    .update-time {{
+      color: #424242;
+      font-weight: 500;
     }}
 
     .controls {{
@@ -388,6 +417,8 @@ html = f"""<!doctype html>
     @media (max-width: 768px) {{
       body {{ padding: 12px; }}
       h1 {{ font-size: 24px; }}
+      header {{ flex-direction: column; align-items: flex-start; }}
+      .last-update {{ font-size: 12px; }}
       .controls {{ flex-direction: column; align-items: stretch; }}
       .stats {{ margin-left: 0; width: 100%; justify-content: space-around; }}
       thead th, tbody td {{ padding: 12px 8px; font-size: 12px; }}
@@ -397,8 +428,14 @@ html = f"""<!doctype html>
 <body>
   <div class=\"container\">
     <header>
-      <h1>Acompanhamento Recepção MAC</h1>
-      <div class=\"subtitle\">Sistema de controle de recepção e conferência de mercadorias</div>
+      <div class=\"header-content\">
+        <h1>Acompanhamento Recepção MAC</h1>
+        <div class=\"subtitle\">Sistema de controle de recepção e conferência de mercadorias</div>
+      </div>
+      <div class=\"last-update\">
+        <span class=\"material-icons\">schedule</span>
+        <span>Atualizado em <span class=\"update-time\">{datetime.now().strftime('%d/%m/%Y às %H:%M')}</span></span>
+      </div>
     </header>
 
     <div class=\"controls\">
