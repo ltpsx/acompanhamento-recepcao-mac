@@ -1,0 +1,30 @@
+# Arquivos Excel (planilhas de trabalho)
+*.xlsx
+*.xlsm
+*.xls
+
+# Arquivos temporários do Excel
+~$*.xlsx
+~$*.xlsm
+~$*.xls
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.idea/
+.vscode/
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
