@@ -1,0 +1,133 @@
+{
+  "name": "Acompanhamento MAC - Atualização Automática",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */2 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "Executa a cada 2 horas"
+    },
+    {
+      "parameters": {
+        "command": "cd \"C:\\Users\\compr\\OneDrive\\Recepção e Conferência de Mercadorias\" && python gerar_acompanhamento.py"
+      },
+      "name": "Execute Python Script",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "notes": "Gera HTML atualizado"
+    },
+    {
+      "parameters": {
+        "command": "cd \"C:\\Users\\compr\\OneDrive\\Recepção e Conferência de Mercadorias\" && git add Acompanhamento_recepcao_mac.html && git commit -m \"Atualização automática - $(date +\"%Y-%m-%d %H:%M\")\" && git push"
+      },
+      "name": "Git Push",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "notes": "Faz commit e push para GitHub"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json[\"exitCode\"]}}",
+              "value2": "0"
+            }
+          ]
+        }
+      },
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "message": "✅ Acompanhamento MAC atualizado com sucesso!",
+        "additionalFields": {}
+      },
+      "name": "Send Success Notification",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "notes": "Notificação de sucesso (opcional)"
+    },
+    {
+      "parameters": {
+        "message": "❌ Erro ao atualizar Acompanhamento MAC",
+        "additionalFields": {}
+      },
+      "name": "Send Error Notification",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "notes": "Notificação de erro (opcional)"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute Python Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Python Script": {
+      "main": [
+        [
+          {
+            "node": "Git Push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Git Push": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Send Success Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

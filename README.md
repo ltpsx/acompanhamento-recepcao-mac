@@ -66,10 +66,41 @@ Abra o arquivo `Acompanhamento_recepcao_mac.html` em qualquer navegador web.
 
 ## 🔄 Atualização
 
-Para atualizar o relatório com novos dados:
+### Manual
+
+Para atualizar o relatório manualmente com novos dados:
 1. Atualize as planilhas das lojas
-2. Execute novamente o script `python gerar_acompanhamento.py`
-3. Atualize a página HTML no navegador
+2. Execute o script: `python gerar_acompanhamento.py`
+3. Faça commit e push:
+   ```bash
+   git add Acompanhamento_recepcao_mac.html
+   git commit -m "Atualizar dados"
+   git push
+   ```
+4. Aguarde 2-5 minutos para o GitHub Pages atualizar
+
+### Automática com Script
+
+Execute o script completo que faz tudo automaticamente:
+```bash
+python atualizar_e_publicar.py
+```
+
+Este script:
+- Gera o HTML atualizado
+- Faz commit automático
+- Envia para o GitHub
+- Mostra logs detalhados
+
+### Automática com n8n
+
+Para configurar automação completa, veja: **[INTEGRACAO_N8N.md](INTEGRACAO_N8N.md)**
+
+O n8n permite:
+- Execução agendada (ex: a cada 2 horas)
+- Notificações automáticas (Discord, Telegram, Email)
+- Monitoramento de erros
+- Workflows personalizados
 
 ## 📝 Observações
 
