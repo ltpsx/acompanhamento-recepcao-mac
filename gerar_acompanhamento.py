@@ -111,6 +111,7 @@ def extract_table(path, city, sheet_name):
     col_nome = find_col(cols, ["NOME DO FORNECEDOR"])
     col_fin = find_col(cols, ["FIN.", "FIN"])
     col_lib = find_col(cols, ["LIB.", "LIB"])
+    col_data_conf = find_col(cols, ["DATA DE CONFERENCIA", "DATA DE CONFERÊNCIA", "DATA CONF.", "DATA CONF"])
 
     if col_nf is None or col_data is None or col_nome is None:
         raise ValueError(f"Required columns not found in {path}")
@@ -123,6 +124,7 @@ def extract_table(path, city, sheet_name):
             "NOME DO FORNECEDOR": data[col_nome],
             "FIN.": data[col_fin] if col_fin else "",
             "LIB.": data[col_lib] if col_lib else "",
+            "DATA CONF.": data[col_data_conf] if col_data_conf else "",
         }
     )
 
@@ -178,6 +180,7 @@ result = pd.concat(frames, ignore_index=True)
 
 result["N.F."] = format_nf(result["N.F."])
 result["DATA"] = format_date(result["DATA"])
+result["DATA CONF."] = format_date(result["DATA CONF."])
 result["NOME DO FORNECEDOR"] = (
     result["NOME DO FORNECEDOR"].fillna("").astype(str).str.strip()
 )
@@ -667,12 +670,14 @@ html = f"""<!doctype html>
       var cityIndex = -1;
       var finIndex = -1;
       var libIndex = -1;
+      var dataConfIndex = -1;
 
       headers.forEach(function (th, idx) {{
         var text = th.textContent.trim().toUpperCase();
         if (text === "CIDADE") cityIndex = idx;
         if (text === "FIN.") finIndex = idx;
         if (text === "LIB.") libIndex = idx;
+        if (text === "DATA CONF.") dataConfIndex = idx;
       }});
 
       if (cityIndex === -1) return;
@@ -700,6 +705,7 @@ html = f"""<!doctype html>
         var fin = (cells[finIndex]?.textContent || "").trim();
         var lib = (cells[libIndex]?.textContent || "").trim();
         var dateText = (cells[dataIndex]?.textContent || "").trim();
+        var dataConfText = (cells[dataConfIndex]?.textContent || "").trim();
 
         // Adicionar atributos para filtros
         row.setAttribute("data-city", city);
@@ -708,7 +714,7 @@ html = f"""<!doctype html>
         // Verificar se está pronta ANTES de calcular dias
         var isReady = fin !== "" && lib !== "";
 
-        // Calcular dias desde a chegada (trava quando fica pronta)
+        // Calcular dias desde a chegada
         var daysCell = document.createElement("td");
         var days = 0;
         var daysClass = "days-ok";
@@ -716,16 +722,28 @@ html = f"""<!doctype html>
         if (dateText) {{
           var dateParts = dateText.split("/");
           if (dateParts.length === 3) {{
-            var itemDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+            var arrivalDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+            arrivalDate.setHours(0, 0, 0, 0);
 
-            // Se está pronta, mostra apenas dias até hoje
-            // Se pendente, continua contando
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
-            itemDate.setHours(0, 0, 0, 0);
-            days = Math.floor((today - itemDate) / (1000 * 60 * 60 * 24));
+            var endDate;
+            // Se está pronta E tem data de conferência, usar essa data para calcular
+            if (isReady && dataConfText) {{
+              var confParts = dataConfText.split("/");
+              if (confParts.length === 3) {{
+                endDate = new Date(confParts[2], confParts[1] - 1, confParts[0]);
+                endDate.setHours(0, 0, 0, 0);
+              }}
+            }}
 
-            // Aplicar cores baseado nos dias (mesmo para prontas, para histórico)
+            // Se não tem data de conferência ou está pendente, usar hoje
+            if (!endDate) {{
+              endDate = new Date();
+              endDate.setHours(0, 0, 0, 0);
+            }}
+
+            days = Math.floor((endDate - arrivalDate) / (1000 * 60 * 60 * 24));
+
+            // Aplicar cores baseado nos dias
             if (days <= 3) {{
               daysClass = "days-ok";
             }} else if (days <= 7) {{
@@ -736,12 +754,7 @@ html = f"""<!doctype html>
           }}
         }}
 
-        // Se está pronta, adicionar indicador visual (mantém a cor do tempo que levou)
         var daysLabel = days + 'd';
-        if (isReady) {{
-          daysLabel = days + 'd'; // Mostra o tempo que levou para ficar pronta
-        }}
-
         daysCell.innerHTML = '<span class=\"days-badge ' + daysClass + '\">' + daysLabel + '</span>';
         row.setAttribute("data-days", days);
         row.appendChild(daysCell);
