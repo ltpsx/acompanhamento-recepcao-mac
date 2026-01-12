@@ -700,7 +700,10 @@ html = f"""<!doctype html>
         row.setAttribute("data-city", city);
         row.setAttribute("data-date", dateText);
 
-        // Calcular dias desde a chegada
+        // Verificar se está pronta ANTES de calcular dias
+        var isReady = fin !== "" && lib !== "";
+
+        // Calcular dias desde a chegada (trava quando fica pronta)
         var daysCell = document.createElement("td");
         var days = 0;
         var daysClass = "days-ok";
@@ -709,11 +712,15 @@ html = f"""<!doctype html>
           var dateParts = dateText.split("/");
           if (dateParts.length === 3) {{
             var itemDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+
+            // Se está pronta, mostra apenas dias até hoje
+            // Se pendente, continua contando
             var today = new Date();
             today.setHours(0, 0, 0, 0);
             itemDate.setHours(0, 0, 0, 0);
             days = Math.floor((today - itemDate) / (1000 * 60 * 60 * 24));
 
+            // Aplicar cores baseado nos dias (mesmo para prontas, para histórico)
             if (days <= 3) {{
               daysClass = "days-ok";
             }} else if (days <= 7) {{
@@ -724,13 +731,18 @@ html = f"""<!doctype html>
           }}
         }}
 
-        daysCell.innerHTML = '<span class=\"days-badge ' + daysClass + '\">' + days + 'd</span>';
+        // Se está pronta, adicionar indicador visual (mantém a cor do tempo que levou)
+        var daysLabel = days + 'd';
+        if (isReady) {{
+          daysLabel = days + 'd'; // Mostra o tempo que levou para ficar pronta
+        }}
+
+        daysCell.innerHTML = '<span class=\"days-badge ' + daysClass + '\">' + daysLabel + '</span>';
         row.setAttribute("data-days", days);
         row.appendChild(daysCell);
 
-        // Criar célula de status
+        // Criar célula de status (isReady já foi definido acima)
         var statusCell = document.createElement("td");
-        var isReady = fin !== "" && lib !== "";
 
         if (isReady) {{
           statusCell.innerHTML = '<span class=\"status-badge status-ready\"><span class=\"material-icons status-icon\">check_circle</span>Pronta</span>';
