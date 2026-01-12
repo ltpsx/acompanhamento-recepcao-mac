@@ -448,6 +448,33 @@ html = f"""<!doctype html>
       font-size: 16px;
     }}
 
+    /* Contador de dias */
+    .days-badge {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 45px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }}
+
+    .days-ok {{
+      background: #E8F5E9;
+      color: #2E7D32;
+    }}
+
+    .days-warning {{
+      background: #FFF3E0;
+      color: #E65100;
+    }}
+
+    .days-alert {{
+      background: #FFEBEE;
+      color: #C62828;
+    }}
+
     /* Sort button */
     .sort-button {{
       display: inline-flex;
@@ -645,8 +672,12 @@ html = f"""<!doctype html>
 
       if (cityIndex === -1) return;
 
-      // Adicionar coluna de status
+      // Adicionar colunas de dias e status
       var headerRow = table.querySelector("thead tr");
+      var daysHeader = document.createElement("th");
+      daysHeader.textContent = "DIAS";
+      headerRow.appendChild(daysHeader);
+
       var statusHeader = document.createElement("th");
       statusHeader.textContent = "STATUS";
       headerRow.appendChild(statusHeader);
@@ -668,6 +699,34 @@ html = f"""<!doctype html>
         // Adicionar atributos para filtros
         row.setAttribute("data-city", city);
         row.setAttribute("data-date", dateText);
+
+        // Calcular dias desde a chegada
+        var daysCell = document.createElement("td");
+        var days = 0;
+        var daysClass = "days-ok";
+
+        if (dateText) {{
+          var dateParts = dateText.split("/");
+          if (dateParts.length === 3) {{
+            var itemDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            itemDate.setHours(0, 0, 0, 0);
+            days = Math.floor((today - itemDate) / (1000 * 60 * 60 * 24));
+
+            if (days <= 3) {{
+              daysClass = "days-ok";
+            }} else if (days <= 7) {{
+              daysClass = "days-warning";
+            }} else {{
+              daysClass = "days-alert";
+            }}
+          }}
+        }}
+
+        daysCell.innerHTML = '<span class=\"days-badge ' + daysClass + '\">' + days + 'd</span>';
+        row.setAttribute("data-days", days);
+        row.appendChild(daysCell);
 
         // Criar célula de status
         var statusCell = document.createElement("td");
