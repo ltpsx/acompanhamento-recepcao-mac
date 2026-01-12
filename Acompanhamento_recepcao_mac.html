@@ -273,13 +273,35 @@
     </header>
 
     <div class="controls">
-      <label for="city-filter">Filtrar por cidade:</label>
+      <label for="city-filter">Cidade:</label>
       <select id="city-filter">
-        <option value="ALL">Todas as cidades</option>
+        <option value="ALL">Todas</option>
       <option value="Araçatuba">Araçatuba</option>
       <option value="Birigui">Birigui</option>
       <option value="Prudente">Prudente</option>
       </select>
+
+      <label for="status-filter">Status:</label>
+      <select id="status-filter">
+        <option value="ALL">Todos</option>
+        <option value="READY">Prontas</option>
+        <option value="PENDING">Pendentes</option>
+      </select>
+
+      <label for="date-filter">Período:</label>
+      <select id="date-filter">
+        <option value="ALL">Todos</option>
+        <option value="TODAY">Hoje</option>
+        <option value="WEEK">Última semana</option>
+        <option value="MONTH">Último mês</option>
+        <option value="CUSTOM">Personalizado</option>
+      </select>
+
+      <div id="custom-date-range" style="display: none; gap: 8px;">
+        <input type="date" id="date-start" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-family: 'Roboto', sans-serif; font-size: 14px;">
+        <span style="color: #757575;">até</span>
+        <input type="date" id="date-end" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-family: 'Roboto', sans-serif; font-size: 14px;">
+      </div>
 
       <div class="stats">
         <div class="stat-card">
@@ -576,14 +598,21 @@
 
       // Processar cada linha
       var rows = Array.prototype.slice.call(table.querySelectorAll("tbody tr"));
+      var dataIndex = -1;
+      headers.forEach(function (th, idx) {
+        if (th.textContent.trim().toUpperCase() === "DATA") dataIndex = idx;
+      });
+
       rows.forEach(function (row) {
         var cells = row.querySelectorAll("td");
         var city = (cells[cityIndex]?.textContent || "").trim();
         var fin = (cells[finIndex]?.textContent || "").trim();
         var lib = (cells[libIndex]?.textContent || "").trim();
+        var dateText = (cells[dataIndex]?.textContent || "").trim();
 
-        // Adicionar atributo data-city para CSS
+        // Adicionar atributos para filtros
         row.setAttribute("data-city", city);
+        row.setAttribute("data-date", dateText);
 
         // Criar célula de status
         var statusCell = document.createElement("td");
@@ -601,10 +630,63 @@
       });
 
       // Controles de filtro
-      var select = document.getElementById("city-filter");
+      var cityFilter = document.getElementById("city-filter");
+      var statusFilter = document.getElementById("status-filter");
+      var dateFilter = document.getElementById("date-filter");
+      var customDateRange = document.getElementById("custom-date-range");
+      var dateStart = document.getElementById("date-start");
+      var dateEnd = document.getElementById("date-end");
       var totalCount = document.getElementById("total-count");
       var readyCount = document.getElementById("ready-count");
       var pendingCount = document.getElementById("pending-count");
+
+      // Função para converter data brasileira para objeto Date
+      function parseDate(dateStr) {
+        if (!dateStr) return null;
+        var parts = dateStr.split("/");
+        if (parts.length === 3) {
+          return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return null;
+      }
+
+      // Função para verificar se a data está no intervalo
+      function isDateInRange(dateStr, filterType, customStart, customEnd) {
+        if (filterType === "ALL") return true;
+
+        var date = parseDate(dateStr);
+        if (!date) return false;
+
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (filterType === "TODAY") {
+          var checkDate = new Date(date);
+          checkDate.setHours(0, 0, 0, 0);
+          return checkDate.getTime() === today.getTime();
+        }
+
+        if (filterType === "WEEK") {
+          var weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return date >= weekAgo && date <= today;
+        }
+
+        if (filterType === "MONTH") {
+          var monthAgo = new Date(today);
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          return date >= monthAgo && date <= today;
+        }
+
+        if (filterType === "CUSTOM" && customStart && customEnd) {
+          var start = new Date(customStart);
+          var end = new Date(customEnd);
+          end.setHours(23, 59, 59, 999);
+          return date >= start && date <= end;
+        }
+
+        return true;
+      }
 
       function updateStats() {
         var visibleRows = rows.filter(function (row) {
@@ -622,21 +704,51 @@
         pendingCount.textContent = pending;
       }
 
-      function applyFilter() {
-        var selected = select.value;
+      function applyFilters() {
+        var cityValue = cityFilter.value;
+        var statusValue = statusFilter.value;
+        var dateValue = dateFilter.value;
+        var startDate = dateStart.value;
+        var endDate = dateEnd.value;
+
         rows.forEach(function (row) {
           var city = row.getAttribute("data-city");
-          if (selected === "ALL" || city === selected) {
+          var ready = row.getAttribute("data-ready");
+          var dateText = row.getAttribute("data-date");
+
+          var cityMatch = cityValue === "ALL" || city === cityValue;
+          var statusMatch = statusValue === "ALL" ||
+                           (statusValue === "READY" && ready === "true") ||
+                           (statusValue === "PENDING" && ready === "false");
+          var dateMatch = isDateInRange(dateText, dateValue, startDate, endDate);
+
+          if (cityMatch && statusMatch && dateMatch) {
             row.style.display = "";
           } else {
             row.style.display = "none";
           }
         });
+
         updateStats();
       }
 
-      select.addEventListener("change", applyFilter);
-      applyFilter();
+      // Mostrar/ocultar campos de data personalizada
+      dateFilter.addEventListener("change", function() {
+        if (this.value === "CUSTOM") {
+          customDateRange.style.display = "flex";
+        } else {
+          customDateRange.style.display = "none";
+        }
+        applyFilters();
+      });
+
+      cityFilter.addEventListener("change", applyFilters);
+      statusFilter.addEventListener("change", applyFilters);
+      dateFilter.addEventListener("change", applyFilters);
+      dateStart.addEventListener("change", applyFilters);
+      dateEnd.addEventListener("change", applyFilters);
+
+      applyFilters();
     })();
   </script>
 </body>
