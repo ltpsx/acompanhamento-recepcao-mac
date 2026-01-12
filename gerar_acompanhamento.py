@@ -606,6 +606,11 @@ html = f"""<!doctype html>
         <span>Mais recentes</span>
       </button>
 
+      <button id=\"sort-days-button\" class=\"sort-button\">
+        <span class=\"material-icons\">arrow_upward</span>
+        <span>Menos dias</span>
+      </button>
+
       <div class=\"stats\">
         <div class=\"stat-card\">
           <div>
@@ -763,11 +768,13 @@ html = f"""<!doctype html>
       var dateStart = document.getElementById("date-start");
       var dateEnd = document.getElementById("date-end");
       var sortButton = document.getElementById("sort-button");
+      var sortDaysButton = document.getElementById("sort-days-button");
       var totalCount = document.getElementById("total-count");
       var readyCount = document.getElementById("ready-count");
       var pendingCount = document.getElementById("pending-count");
 
       var sortDescending = true; // Padrão: mais recentes primeiro
+      var sortDaysDescending = false; // Padrão: menos dias primeiro (ascendente)
 
       // Função para converter data brasileira para objeto Date
       function parseDate(dateStr) {{
@@ -856,6 +863,25 @@ html = f"""<!doctype html>
         }});
       }}
 
+      function sortByDays() {{
+        var tbody = table.querySelector("tbody");
+        var sortedRows = rows.slice().sort(function (a, b) {{
+          var daysA = parseInt(a.getAttribute("data-days")) || 0;
+          var daysB = parseInt(b.getAttribute("data-days")) || 0;
+
+          if (sortDaysDescending) {{
+            return daysB - daysA; // Mais dias primeiro
+          }} else {{
+            return daysA - daysB; // Menos dias primeiro
+          }}
+        }});
+
+        // Reordenar linhas no DOM
+        sortedRows.forEach(function (row) {{
+          tbody.appendChild(row);
+        }});
+      }}
+
       function applyFilters() {{
         var cityValue = cityFilter.value;
         var statusValue = statusFilter.value;
@@ -894,7 +920,7 @@ html = f"""<!doctype html>
         applyFilters();
       }});
 
-      // Botão de ordenação
+      // Botão de ordenação por data
       sortButton.addEventListener("click", function() {{
         sortDescending = !sortDescending;
 
@@ -905,6 +931,19 @@ html = f"""<!doctype html>
         }}
 
         sortRows();
+      }});
+
+      // Botão de ordenação por dias
+      sortDaysButton.addEventListener("click", function() {{
+        sortDaysDescending = !sortDaysDescending;
+
+        if (sortDaysDescending) {{
+          sortDaysButton.innerHTML = '<span class=\"material-icons\">arrow_downward</span><span>Mais dias</span>';
+        }} else {{
+          sortDaysButton.innerHTML = '<span class=\"material-icons\">arrow_upward</span><span>Menos dias</span>';
+        }}
+
+        sortByDays();
       }});
 
       cityFilter.addEventListener("change", applyFilters);
