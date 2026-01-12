@@ -399,7 +399,7 @@
       </div>
       <div class="last-update">
         <span class="material-icons">schedule</span>
-        <span>Atualizado em <span class="update-time">12/01/2026 às 16:16</span></span>
+        <span>Atualizado em <span class="update-time">12/01/2026 às 16:30</span></span>
       </div>
     </header>
 
@@ -755,6 +755,7 @@
       var libIndex = -1;
       var dataConfIndex = -1;
       var fornecedorIndex = -1;
+      var nfIndex = -1;
 
       headers.forEach(function (th, idx) {
         var text = th.textContent.trim().toUpperCase();
@@ -763,6 +764,7 @@
         if (text === "LIB.") libIndex = idx;
         if (text === "DATA CONF.") dataConfIndex = idx;
         if (text === "NOME DO FORNECEDOR") fornecedorIndex = idx;
+        if (text === "N.F.") nfIndex = idx;
       });
 
       if (cityIndex === -1) return;
