@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Acompanhamento Recepção MAC</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #fafafa;
+      color: #212121;
+      padding: 24px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-content {
+      flex: 1;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 500;
+      color: #212121;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #757575;
+      font-size: 14px;
+    }
+
+    .last-update {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #757575;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .last-update .material-icons {
+      font-size: 18px;
+      color: #9e9e9e;
+    }
+
+    .update-time {
+      color: #424242;
+      font-weight: 500;
+    }
+
+    .controls {
+      background: #ffffff;
+      padding: 20px 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 250px;
+      max-width: 400px;
+      position: relative;
+    }
+
+    .search-box .material-icons {
+      position: absolute;
+      left: 12px;
+      color: #757575;
+      font-size: 20px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border: 1px solid #e0e0e0;
+      border-radius: 24px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      color: #212121;
+      transition: all 0.2s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #424242;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .search-box input::placeholder {
+      color: #9e9e9e;
+    }
+
+    .controls label {
+      font-weight: 500;
+      color: #424242;
+      font-size: 14px;
+    }
+
+    .controls select {
+      padding: 10px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #ffffff;
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      color: #212121;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 180px;
+    }
+
+    .controls select:hover {
+      border-color: #9e9e9e;
+    }
+
+    .controls select:focus {
+      outline: none;
+      border-color: #424242;
+    }
+
+    .stats {
+      display: flex;
+      gap: 24px;
+      margin-left: auto;
+    }
+
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #757575;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 500;
+      color: #212121;
+    }
+
+    .table-container {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #f5f5f5;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    thead th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 13px;
+      color: #616161;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    tbody td {
+      padding: 16px;
+      font-size: 14px;
+      border-bottom: 1px solid #f5f5f5;
+      color: #424242;
+    }
+
+    tbody tr {
+      transition: background-color 0.2s;
+    }
+
+    tbody tr:hover {
+      background: #f9f9f9;
+    }
+
+    /* Cores por cidade */
+    tbody tr[data-city="Araçatuba"] {
+      border-left: 4px solid #2196F3;
+      background: rgba(33, 150, 243, 0.04);
+    }
+
+    tbody tr[data-city="Araçatuba"]:hover {
+      background: rgba(33, 150, 243, 0.08);
+    }
+
+    tbody tr[data-city="Prudente"] {
+      border-left: 4px solid #4CAF50;
+      background: rgba(76, 175, 80, 0.04);
+    }
+
+    tbody tr[data-city="Prudente"]:hover {
+      background: rgba(76, 175, 80, 0.08);
+    }
+
+    tbody tr[data-city="Birigui"] {
+      border-left: 4px solid #FF9800;
+      background: rgba(255, 152, 0, 0.04);
+    }
+
+    tbody tr[data-city="Birigui"]:hover {
+      background: rgba(255, 152, 0, 0.08);
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-ready {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .status-pending {
+      background: #FFF3E0;
+      color: #E65100;
+    }
+
+    .status-icon {
+      font-size: 16px;
+    }
+
+    /* Contador de dias */
+    .days-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 45px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .days-ok {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .days-warning {
+      background: #FFF3E0;
+      color: #E65100;
+    }
+
+    .days-alert {
+      background: #FFEBEE;
+      color: #C62828;
+    }
+
+    /* Sort button */
+    .sort-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      color: #424242;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .sort-button:hover {
+      background: #eeeeee;
+      border-color: #bdbdbd;
+    }
+
+    .sort-button:active {
+      background: #e0e0e0;
+    }
+
+    .sort-button .material-icons {
+      font-size: 18px;
+    }
+
+    /* Legend */
+    .legend {
+      background: #ffffff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-top: 24px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .legend-title {
+      font-weight: 500;
+      color: #424242;
+      font-size: 14px;
+    }
+
+    .legend-items {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #616161;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+    }
+
+    .color-aracatuba { background: #2196F3; }
+    .color-prudente { background: #4CAF50; }
+    .color-birigui { background: #FF9800; }
+
+    @media (max-width: 768px) {
+      body { padding: 12px; }
+      h1 { font-size: 24px; }
+      header { flex-direction: column; align-items: flex-start; }
+      .last-update { font-size: 12px; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .stats { margin-left: 0; width: 100%; justify-content: space-around; }
+      thead th, tbody td { padding: 12px 8px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <h1>Acompanhamento Recepção MAC</h1>
+        <div class="subtitle">Sistema de controle de recepção e conferência de mercadorias</div>
+      </div>
+      <div class="last-update">
+        <span class="material-icons">schedule</span>
+        <span>Atualizado em <span class="update-time">13/01/2026 às 15:41</span></span>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="search-box">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Buscar por fornecedor ou NF...">
+      </div>
+
+      <label for="city-filter">Cidade:</label>
+      <select id="city-filter">
+        <option value="ALL">Todas</option>
+      <option value="Araçatuba">Araçatuba</option>
+      <option value="Birigui">Birigui</option>
+      <option value="Prudente">Prudente</option>
+      </select>
+
+      <label for="status-filter">Status:</label>
+      <select id="status-filter">
+        <option value="ALL">Todos</option>
+        <option value="READY">Prontas</option>
+        <option value="PENDING">Pendentes</option>
+      </select>
+
+      <label for="date-filter">Período:</label>
+      <select id="date-filter">
+        <option value="ALL">Todos</option>
+        <option value="TODAY">Hoje</option>
+        <option value="WEEK">Última semana</option>
+        <option value="MONTH">Último mês</option>
+        <option value="CUSTOM">Personalizado</option>
+      </select>
+
+      <div id="custom-date-range" style="display: none; gap: 8px;">
+        <input type="date" id="date-start" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-family: 'Roboto', sans-serif; font-size: 14px;">
+        <span style="color: #757575;">até</span>
+        <input type="date" id="date-end" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-family: 'Roboto', sans-serif; font-size: 14px;">
+      </div>
+
+      <button id="sort-button" class="sort-button">
+        <span class="material-icons">arrow_downward</span>
+        <span>Mais recentes</span>
+      </button>
+
+      <button id="sort-days-button" class="sort-button">
+        <span class="material-icons">arrow_upward</span>
+        <span>Menos dias</span>
+      </button>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Total</div>
+            <div class="stat-value" id="total-count">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Prontas</div>
+            <div class="stat-value" id="ready-count">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Pendentes</div>
+            <div class="stat-value" id="pending-count">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div class="table-wrap">
+        <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>CIDADE</th>
+      <th>N.F.</th>
+      <th>DATA</th>
+      <th>NOME DO FORNECEDOR</th>
+      <th>FIN.</th>
+      <th>LIB.</th>
+      <th>DATA CONF.</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Araçatuba</td>
+      <td>14151</td>
+      <td>05/01/2026</td>
+      <td>MS EXTENSOR</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>13/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>970238</td>
+      <td>05/01/2026</td>
+      <td>PROTORK</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>09/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>22718</td>
+      <td>05/01/2026</td>
+      <td>MIXS</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>12/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>22712</td>
+      <td>05/01/2026</td>
+      <td>MIXS</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>12/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>155500</td>
+      <td>06/01/2026</td>
+      <td>BRUDOVAN PNEUS</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>155501</td>
+      <td>06/01/2026</td>
+      <td>BRUDOVAN PNEUS</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>968049</td>
+      <td>08/01/2026</td>
+      <td>MARLON BONILHA</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>12/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>776</td>
+      <td>08/01/2026</td>
+      <td>MAC BIRIGUI</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>09/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>782</td>
+      <td>08/01/2026</td>
+      <td>MAC BIRIGUI</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>09/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>22799</td>
+      <td>09/01/2026</td>
+      <td>MAC PRUDENTE</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>09/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>22843</td>
+      <td>09/01/2026</td>
+      <td>MAC PRUDENTE</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>22844</td>
+      <td>09/01/2026</td>
+      <td>MAC PRUDENTE</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>09/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>11032</td>
+      <td>09/01/2026</td>
+      <td>REBOTE FABR.E COM . EQUIP.I.LTDA</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>794</td>
+      <td>09/01/2026</td>
+      <td>MAC BIRIGUI</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>09/01/2026</td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>22363</td>
+      <td>13/01/2026</td>
+      <td>VHG ROUPAS E ACESSORIOS</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>140936</td>
+      <td>13/01/2026</td>
+      <td>WGK INDUSTRIA</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>821</td>
+      <td>13/01/2026</td>
+      <td>MAC BIRIGUI</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Araçatuba</td>
+      <td>14151</td>
+      <td>05/01/2026</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Birigui</td>
+      <td>22720</td>
+      <td>05/01/2026</td>
+      <td>MIXS+HELMETS</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Birigui</td>
+      <td>155502</td>
+      <td>06/01/2026</td>
+      <td>BRUDOVAN PNEUS LTDA</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Birigui</td>
+      <td>674880</td>
+      <td>08/01/2026</td>
+      <td>MAC ATACADO ATA</td>
+      <td>OK</td>
+      <td>SIM</td>
+      <td>12/01/2026</td>
+    </tr>
+    <tr>
+      <td>Prudente</td>
+      <td>674601</td>
+      <td>30/12/2025</td>
+      <td>MAC ATACADO ARAÇATUBA</td>
+      <td>ok</td>
+      <td>SIM</td>
+      <td>07/01/2026</td>
+    </tr>
+    <tr>
+      <td>Prudente</td>
+      <td>22713</td>
+      <td>05/01/2026</td>
+      <td>MIXS HELMETS</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Prudente</td>
+      <td>22719</td>
+      <td>05/01/2026</td>
+      <td>MIXS HELMETS</td>
+      <td>ok</td>
+      <td>SIM</td>
+      <td>08/01/2026</td>
+    </tr>
+    <tr>
+      <td>Prudente</td>
+      <td>155503</td>
+      <td>22/12/2025</td>
+      <td>BRUDOVAN PNEUS LTDA</td>
+      <td>ok</td>
+      <td>SIM</td>
+      <td>07/01/2026</td>
+    </tr>
+    <tr>
+      <td>Prudente</td>
+      <td>155504</td>
+      <td>22/12/2025</td>
+      <td>BRUDOVAN PNEUS LTDA</td>
+      <td>ok</td>
+      <td>SIM</td>
+      <td>07/01/2026</td>
+    </tr>
+    <tr>
+      <td>Prudente</td>
+      <td>674876</td>
+      <td>07/01/2026</td>
+      <td>MAC ATACADO ARAÇATUBA</td>
+      <td>ok</td>
+      <td>SIM</td>
+      <td>07/01/2026</td>
+    </tr>
+    <tr>
+      <td>Prudente</td>
+      <td>675034</td>
+      <td>09/01/2026</td>
+      <td>MAC ATACADO ARAÇATUBA</td>
+      <td></td>
+      <td>SIM</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Prudente</td>
+      <td>675041</td>
+      <td>09/01/2026</td>
+      <td>MAC ATACADO ARAÇATUBA</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="legend-title">Legenda:</span>
+      <div class="legend-items">
+        <div class="legend-item">
+          <div class="legend-color color-aracatuba"></div>
+          <span>Araçatuba</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color color-prudente"></div>
+          <span>Prudente</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color color-birigui"></div>
+          <span>Birigui</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var table = document.querySelector("table");
+      if (!table) return;
+
+      var headers = table.querySelectorAll("thead th");
+      var cityIndex = -1;
+      var finIndex = -1;
+      var libIndex = -1;
+      var dataConfIndex = -1;
+      var fornecedorIndex = -1;
+      var nfIndex = -1;
+
+      headers.forEach(function (th, idx) {
+        var text = th.textContent.trim().toUpperCase();
+        if (text === "CIDADE") cityIndex = idx;
+        if (text === "FIN.") finIndex = idx;
+        if (text === "LIB.") libIndex = idx;
+        if (text === "DATA CONF.") dataConfIndex = idx;
+        if (text === "NOME DO FORNECEDOR") fornecedorIndex = idx;
+        if (text === "N.F.") nfIndex = idx;
+      });
+
+      if (cityIndex === -1) return;
+
+      // Adicionar colunas de dias e status
+      var headerRow = table.querySelector("thead tr");
+      var daysHeader = document.createElement("th");
+      daysHeader.textContent = "DIAS";
+      headerRow.appendChild(daysHeader);
+
+      var statusHeader = document.createElement("th");
+      statusHeader.textContent = "STATUS";
+      headerRow.appendChild(statusHeader);
+
+      // Processar cada linha
+      var rows = Array.prototype.slice.call(table.querySelectorAll("tbody tr"));
+      var dataIndex = -1;
+      headers.forEach(function (th, idx) {
+        if (th.textContent.trim().toUpperCase() === "DATA") dataIndex = idx;
+      });
+
+      rows.forEach(function (row) {
+        var cells = row.querySelectorAll("td");
+        var city = (cells[cityIndex]?.textContent || "").trim();
+        var fin = (cells[finIndex]?.textContent || "").trim();
+        var lib = (cells[libIndex]?.textContent || "").trim();
+        var dateText = (cells[dataIndex]?.textContent || "").trim();
+        var dataConfText = (cells[dataConfIndex]?.textContent || "").trim();
+        var fornecedor = (cells[fornecedorIndex]?.textContent || "").trim();
+        var nf = (cells[nfIndex]?.textContent || "").trim();
+
+        // Adicionar atributos para filtros
+        row.setAttribute("data-city", city);
+        row.setAttribute("data-date", dateText);
+        row.setAttribute("data-fornecedor", fornecedor.toUpperCase());
+        row.setAttribute("data-nf", nf.toUpperCase());
+
+        // Verificar se está pronta ANTES de calcular dias
+        var isReady = fin !== "" && lib !== "";
+
+        // Calcular dias desde a chegada
+        var daysCell = document.createElement("td");
+        var days = 0;
+        var daysClass = "days-ok";
+
+        if (dateText) {
+          var dateParts = dateText.split("/");
+          if (dateParts.length === 3) {
+            var arrivalDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+            arrivalDate.setHours(0, 0, 0, 0);
+
+            var endDate;
+            // Se está pronta E tem data de conferência, usar essa data para calcular
+            if (isReady && dataConfText) {
+              var confParts = dataConfText.split("/");
+              if (confParts.length === 3) {
+                endDate = new Date(confParts[2], confParts[1] - 1, confParts[0]);
+                endDate.setHours(0, 0, 0, 0);
+              }
+            }
+
+            // Se não tem data de conferência ou está pendente, usar hoje
+            if (!endDate) {
+              endDate = new Date();
+              endDate.setHours(0, 0, 0, 0);
+            }
+
+            days = Math.floor((endDate - arrivalDate) / (1000 * 60 * 60 * 24));
+
+            // Aplicar cores baseado nos dias
+            if (days <= 3) {
+              daysClass = "days-ok";
+            } else if (days <= 7) {
+              daysClass = "days-warning";
+            } else {
+              daysClass = "days-alert";
+            }
+          }
+        }
+
+        var daysLabel = days + 'd';
+        daysCell.innerHTML = '<span class="days-badge ' + daysClass + '">' + daysLabel + '</span>';
+        row.setAttribute("data-days", days);
+        row.appendChild(daysCell);
+
+        // Criar célula de status (isReady já foi definido acima)
+        var statusCell = document.createElement("td");
+
+        if (isReady) {
+          statusCell.innerHTML = '<span class="status-badge status-ready"><span class="material-icons status-icon">check_circle</span>Pronta</span>';
+          row.setAttribute("data-ready", "true");
+        } else {
+          statusCell.innerHTML = '<span class="status-badge status-pending"><span class="material-icons status-icon">pending</span>Pendente</span>';
+          row.setAttribute("data-ready", "false");
+        }
+
+        row.appendChild(statusCell);
+      });
+
+      // Controles de filtro e ordenação
+      var searchInput = document.getElementById("search-input");
+      var cityFilter = document.getElementById("city-filter");
+      var statusFilter = document.getElementById("status-filter");
+      var dateFilter = document.getElementById("date-filter");
+      var customDateRange = document.getElementById("custom-date-range");
+      var dateStart = document.getElementById("date-start");
+      var dateEnd = document.getElementById("date-end");
+      var sortButton = document.getElementById("sort-button");
+      var sortDaysButton = document.getElementById("sort-days-button");
+      var totalCount = document.getElementById("total-count");
+      var readyCount = document.getElementById("ready-count");
+      var pendingCount = document.getElementById("pending-count");
+
+      var sortDescending = true; // Padrão: mais recentes primeiro
+      var sortDaysDescending = false; // Padrão: menos dias primeiro (ascendente)
+
+      // Função para converter data brasileira para objeto Date
+      function parseDate(dateStr) {
+        if (!dateStr) return null;
+        var parts = dateStr.split("/");
+        if (parts.length === 3) {
+          return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return null;
+      }
+
+      // Função para verificar se a data está no intervalo
+      function isDateInRange(dateStr, filterType, customStart, customEnd) {
+        if (filterType === "ALL") return true;
+
+        var date = parseDate(dateStr);
+        if (!date) return false;
+
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (filterType === "TODAY") {
+          var checkDate = new Date(date);
+          checkDate.setHours(0, 0, 0, 0);
+          return checkDate.getTime() === today.getTime();
+        }
+
+        if (filterType === "WEEK") {
+          var weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return date >= weekAgo && date <= today;
+        }
+
+        if (filterType === "MONTH") {
+          var monthAgo = new Date(today);
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          return date >= monthAgo && date <= today;
+        }
+
+        if (filterType === "CUSTOM" && customStart && customEnd) {
+          var start = new Date(customStart);
+          var end = new Date(customEnd);
+          end.setHours(23, 59, 59, 999);
+          return date >= start && date <= end;
+        }
+
+        return true;
+      }
+
+      function updateStats() {
+        var visibleRows = rows.filter(function (row) {
+          return row.style.display !== "none";
+        });
+
+        var total = visibleRows.length;
+        var ready = visibleRows.filter(function (row) {
+          return row.getAttribute("data-ready") === "true";
+        }).length;
+        var pending = total - ready;
+
+        totalCount.textContent = total;
+        readyCount.textContent = ready;
+        pendingCount.textContent = pending;
+      }
+
+      function sortRows() {
+        var tbody = table.querySelector("tbody");
+        var sortedRows = rows.slice().sort(function (a, b) {
+          var dateA = parseDate(a.getAttribute("data-date"));
+          var dateB = parseDate(b.getAttribute("data-date"));
+
+          if (!dateA && !dateB) return 0;
+          if (!dateA) return 1;
+          if (!dateB) return -1;
+
+          if (sortDescending) {
+            return dateB - dateA; // Mais recentes primeiro
+          } else {
+            return dateA - dateB; // Mais antigas primeiro
+          }
+        });
+
+        // Reordenar linhas no DOM
+        sortedRows.forEach(function (row) {
+          tbody.appendChild(row);
+        });
+      }
+
+      function sortByDays() {
+        var tbody = table.querySelector("tbody");
+        var sortedRows = rows.slice().sort(function (a, b) {
+          var daysA = parseInt(a.getAttribute("data-days")) || 0;
+          var daysB = parseInt(b.getAttribute("data-days")) || 0;
+
+          if (sortDaysDescending) {
+            return daysB - daysA; // Mais dias primeiro
+          } else {
+            return daysA - daysB; // Menos dias primeiro
+          }
+        });
+
+        // Reordenar linhas no DOM
+        sortedRows.forEach(function (row) {
+          tbody.appendChild(row);
+        });
+      }
+
+      function applyFilters() {
+        var searchValue = searchInput.value.toUpperCase();
+        var cityValue = cityFilter.value;
+        var statusValue = statusFilter.value;
+        var dateValue = dateFilter.value;
+        var startDate = dateStart.value;
+        var endDate = dateEnd.value;
+
+        rows.forEach(function (row) {
+          var city = row.getAttribute("data-city");
+          var ready = row.getAttribute("data-ready");
+          var dateText = row.getAttribute("data-date");
+          var fornecedor = row.getAttribute("data-fornecedor");
+          var nf = row.getAttribute("data-nf");
+
+          var searchMatch = searchValue === "" ||
+                           fornecedor.indexOf(searchValue) !== -1 ||
+                           nf.indexOf(searchValue) !== -1;
+          var cityMatch = cityValue === "ALL" || city === cityValue;
+          var statusMatch = statusValue === "ALL" ||
+                           (statusValue === "READY" && ready === "true") ||
+                           (statusValue === "PENDING" && ready === "false");
+          var dateMatch = isDateInRange(dateText, dateValue, startDate, endDate);
+
+          if (searchMatch && cityMatch && statusMatch && dateMatch) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+
+        updateStats();
+      }
+
+      // Mostrar/ocultar campos de data personalizada
+      dateFilter.addEventListener("change", function() {
+        if (this.value === "CUSTOM") {
+          customDateRange.style.display = "flex";
+        } else {
+          customDateRange.style.display = "none";
+        }
+        applyFilters();
+      });
+
+      // Botão de ordenação por data
+      sortButton.addEventListener("click", function() {
+        sortDescending = !sortDescending;
+
+        if (sortDescending) {
+          sortButton.innerHTML = '<span class="material-icons">arrow_downward</span><span>Mais recentes</span>';
+        } else {
+          sortButton.innerHTML = '<span class="material-icons">arrow_upward</span><span>Mais antigas</span>';
+        }
+
+        sortRows();
+      });
+
+      // Botão de ordenação por dias
+      sortDaysButton.addEventListener("click", function() {
+        sortDaysDescending = !sortDaysDescending;
+
+        if (sortDaysDescending) {
+          sortDaysButton.innerHTML = '<span class="material-icons">arrow_downward</span><span>Mais dias</span>';
+        } else {
+          sortDaysButton.innerHTML = '<span class="material-icons">arrow_upward</span><span>Menos dias</span>';
+        }
+
+        sortByDays();
+      });
+
+      searchInput.addEventListener("input", applyFilters);
+      cityFilter.addEventListener("change", applyFilters);
+      statusFilter.addEventListener("change", applyFilters);
+      dateFilter.addEventListener("change", applyFilters);
+      dateStart.addEventListener("change", applyFilters);
+      dateEnd.addEventListener("change", applyFilters);
+
+      // Ordenar por data ao carregar (mais recentes primeiro)
+      sortRows();
+      applyFilters();
+    })();
+  </script>
+</body>
+</html>
