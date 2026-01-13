@@ -13,7 +13,10 @@
       "Bash(python atualizar_e_publicar.py:*)",
       "Bash(gh api:*)",
       "Bash(python -c:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(ls:*)",
+      "Bash(git checkout:*)",
+      "Bash(cp:*)"
     ]
   }
 }
