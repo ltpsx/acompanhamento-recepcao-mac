@@ -616,7 +616,7 @@ html = f"""<!doctype html>
     <div class=\"controls\">
       <div class=\"search-box\">
         <span class=\"material-icons\">search</span>
-        <input type=\"text\" id=\"search-input\" placeholder=\"Buscar por fornecedor...\">
+        <input type=\"text\" id=\"search-input\" placeholder=\"Buscar por fornecedor ou NF...\">
       </div>
 
       <label for=\"city-filter\">Cidade:</label>
@@ -715,6 +715,7 @@ html = f"""<!doctype html>
       var libIndex = -1;
       var dataConfIndex = -1;
       var fornecedorIndex = -1;
+      var nfIndex = -1;
 
       headers.forEach(function (th, idx) {{
         var text = th.textContent.trim().toUpperCase();
@@ -723,6 +724,7 @@ html = f"""<!doctype html>
         if (text === "LIB.") libIndex = idx;
         if (text === "DATA CONF.") dataConfIndex = idx;
         if (text === "NOME DO FORNECEDOR") fornecedorIndex = idx;
+        if (text === "N.F.") nfIndex = idx;
       }});
 
       if (cityIndex === -1) return;
@@ -752,11 +754,13 @@ html = f"""<!doctype html>
         var dateText = (cells[dataIndex]?.textContent || "").trim();
         var dataConfText = (cells[dataConfIndex]?.textContent || "").trim();
         var fornecedor = (cells[fornecedorIndex]?.textContent || "").trim();
+        var nf = (cells[nfIndex]?.textContent || "").trim();
 
         // Adicionar atributos para filtros
         row.setAttribute("data-city", city);
         row.setAttribute("data-date", dateText);
         row.setAttribute("data-fornecedor", fornecedor.toUpperCase());
+        row.setAttribute("data-nf", nf.toUpperCase());
 
         // Verificar se está pronta ANTES de calcular dias
         var isReady = fin !== "" && lib !== "";
@@ -956,8 +960,11 @@ html = f"""<!doctype html>
           var ready = row.getAttribute("data-ready");
           var dateText = row.getAttribute("data-date");
           var fornecedor = row.getAttribute("data-fornecedor");
+          var nf = row.getAttribute("data-nf");
 
-          var searchMatch = searchValue === "" || fornecedor.indexOf(searchValue) !== -1;
+          var searchMatch = searchValue === "" ||
+                           fornecedor.indexOf(searchValue) !== -1 ||
+                           nf.indexOf(searchValue) !== -1;
           var cityMatch = cityValue === "ALL" || city === cityValue;
           var statusMatch = statusValue === "ALL" ||
                            (statusValue === "READY" && ready === "true") ||
