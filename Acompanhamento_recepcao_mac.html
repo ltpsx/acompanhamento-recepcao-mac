@@ -399,14 +399,14 @@
       </div>
       <div class="last-update">
         <span class="material-icons">schedule</span>
-        <span>Atualizado em <span class="update-time">12/01/2026 às 17:00</span></span>
+        <span>Atualizado em <span class="update-time">13/01/2026 às 08:20</span></span>
       </div>
     </header>
 
     <div class="controls">
       <div class="search-box">
         <span class="material-icons">search</span>
-        <input type="text" id="search-input" placeholder="Buscar por fornecedor...">
+        <input type="text" id="search-input" placeholder="Buscar por fornecedor ou NF...">
       </div>
 
       <label for="city-filter">Cidade:</label>
@@ -510,7 +510,7 @@
       <td>05/01/2026</td>
       <td>MIXS</td>
       <td>OK</td>
-      <td></td>
+      <td>SIM</td>
       <td>12/01/2026</td>
     </tr>
     <tr>
@@ -519,7 +519,7 @@
       <td>05/01/2026</td>
       <td>MIXS</td>
       <td>OK</td>
-      <td></td>
+      <td>SIM</td>
       <td>12/01/2026</td>
     </tr>
     <tr>
@@ -545,9 +545,9 @@
       <td>968049</td>
       <td>08/01/2026</td>
       <td>MARLON BONILHA</td>
+      <td>OK</td>
       <td></td>
-      <td></td>
-      <td></td>
+      <td>12/01/2026</td>
     </tr>
     <tr>
       <td>Araçatuba</td>
@@ -660,7 +660,7 @@
     <tr>
       <td>Prudente</td>
       <td>22713</td>
-      <td>28/11/2025</td>
+      <td>05/01/2026</td>
       <td>MIXS HELMETS</td>
       <td></td>
       <td></td>
@@ -669,7 +669,7 @@
     <tr>
       <td>Prudente</td>
       <td>22719</td>
-      <td>30/12/2025</td>
+      <td>05/01/2026</td>
       <td>MIXS HELMETS</td>
       <td>ok</td>
       <td>SIM</td>
@@ -794,11 +794,13 @@
         var dateText = (cells[dataIndex]?.textContent || "").trim();
         var dataConfText = (cells[dataConfIndex]?.textContent || "").trim();
         var fornecedor = (cells[fornecedorIndex]?.textContent || "").trim();
+        var nf = (cells[nfIndex]?.textContent || "").trim();
 
         // Adicionar atributos para filtros
         row.setAttribute("data-city", city);
         row.setAttribute("data-date", dateText);
         row.setAttribute("data-fornecedor", fornecedor.toUpperCase());
+        row.setAttribute("data-nf", nf.toUpperCase());
 
         // Verificar se está pronta ANTES de calcular dias
         var isReady = fin !== "" && lib !== "";
@@ -998,8 +1000,11 @@
           var ready = row.getAttribute("data-ready");
           var dateText = row.getAttribute("data-date");
           var fornecedor = row.getAttribute("data-fornecedor");
+          var nf = row.getAttribute("data-nf");
 
-          var searchMatch = searchValue === "" || fornecedor.indexOf(searchValue) !== -1;
+          var searchMatch = searchValue === "" ||
+                           fornecedor.indexOf(searchValue) !== -1 ||
+                           nf.indexOf(searchValue) !== -1;
           var cityMatch = cityValue === "ALL" || city === cityValue;
           var statusMatch = statusValue === "ALL" ||
                            (statusValue === "READY" && ready === "true") ||
