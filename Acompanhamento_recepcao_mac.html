@@ -399,7 +399,7 @@
       </div>
       <div class="last-update">
         <span class="material-icons">schedule</span>
-        <span>Última verificação em <span class="update-time">14/01/2026 às 13:44</span></span>
+        <span>Última verificação em <span class="update-time" id="last-check-time">carregando...</span></span>
       </div>
     </header>
 
@@ -790,6 +790,25 @@
   </div>
 
   <script>
+    // Carregar horário da última verificação
+    (function() {
+      fetch('.ultima_atualizacao.json')
+        .then(response => response.json())
+        .then(data => {
+          const timeElement = document.getElementById('last-check-time');
+          if (timeElement && data.ultima_verificacao) {
+            timeElement.textContent = data.ultima_verificacao;
+          }
+        })
+        .catch(err => {
+          console.log('Não foi possível carregar o horário da última verificação');
+          const timeElement = document.getElementById('last-check-time');
+          if (timeElement) {
+            timeElement.textContent = 'N/A';
+          }
+        });
+    })();
+
     (function () {
       var table = document.querySelector("table");
       if (!table) return;
