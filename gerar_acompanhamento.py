@@ -218,6 +218,8 @@ html = f"""<!doctype html>
   <title>Acompanhamento Recepção MAC</title>
   <link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap\">
   <link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/icon?family=Material+Icons\">
+  <script src=\"https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js\"></script>
+  <script src=\"https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js\"></script>
   <style>
     * {{
       margin: 0;
@@ -591,6 +593,166 @@ html = f"""<!doctype html>
     .color-prudente {{ background: #4CAF50; }}
     .color-birigui {{ background: #FF9800; }}
 
+    /* Tabs */
+    .tabs {{
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e0e0e0;
+    }}
+
+    .tab-button {{
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: #757575;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Roboto', sans-serif;
+      margin-bottom: -2px;
+    }}
+
+    .tab-button:hover {{
+      color: #424242;
+      background: #f5f5f5;
+    }}
+
+    .tab-button.active {{
+      color: #1976D2;
+      border-bottom-color: #1976D2;
+    }}
+
+    .tab-content {{
+      display: none;
+    }}
+
+    .tab-content.active {{
+      display: block;
+    }}
+
+    /* Dashboard */
+    .dashboard-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }}
+
+    .metric-card {{
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }}
+
+    .metric-label {{
+      color: #757575;
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }}
+
+    .metric-value {{
+      color: #212121;
+      font-size: 36px;
+      font-weight: 500;
+    }}
+
+    .metric-unit {{
+      color: #757575;
+      font-size: 14px;
+      margin-left: 4px;
+    }}
+
+    .chart-container {{
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+    }}
+
+    .chart-title {{
+      font-size: 18px;
+      font-weight: 500;
+      color: #424242;
+      margin-bottom: 20px;
+    }}
+
+    .chart-wrapper {{
+      position: relative;
+      height: 300px;
+    }}
+
+    .ranking-container {{
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }}
+
+    .ranking-list {{
+      list-style: none;
+    }}
+
+    .ranking-item {{
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }}
+
+    .ranking-item:last-child {{
+      border-bottom: none;
+    }}
+
+    .ranking-position {{
+      width: 32px;
+      height: 32px;
+      background: #f5f5f5;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #757575;
+      margin-right: 16px;
+    }}
+
+    .ranking-position.first {{
+      background: #FFD700;
+      color: #ffffff;
+    }}
+
+    .ranking-position.second {{
+      background: #C0C0C0;
+      color: #ffffff;
+    }}
+
+    .ranking-position.third {{
+      background: #CD7F32;
+      color: #ffffff;
+    }}
+
+    .ranking-city {{
+      flex: 1;
+      font-weight: 500;
+      color: #424242;
+    }}
+
+    .ranking-percentage {{
+      font-size: 18px;
+      font-weight: 600;
+      color: #4CAF50;
+    }}
+
     @media (max-width: 768px) {{
       body {{ padding: 12px; }}
       h1 {{ font-size: 24px; }}
@@ -615,6 +777,12 @@ html = f"""<!doctype html>
       </div>
     </header>
 
+    <div class=\"tabs\">
+      <button class=\"tab-button active\" data-tab=\"dados\">Dados</button>
+      <button class=\"tab-button\" data-tab=\"dashboard\">Dashboard</button>
+    </div>
+
+    <div id=\"dados\" class=\"tab-content active\">
     <div class=\"controls\">
       <div class=\"search-box\">
         <span class=\"material-icons\">search</span>
@@ -702,6 +870,50 @@ html = f"""<!doctype html>
           <div class=\"legend-color color-birigui\"></div>
           <span>Birigui</span>
         </div>
+      </div>
+    </div>
+    </div> <!-- Fim tab dados -->
+
+    <div id=\"dashboard\" class=\"tab-content\">
+      <div class=\"dashboard-grid\">
+        <div class=\"metric-card\">
+          <div class=\"metric-label\">Total</div>
+          <div class=\"metric-value\" id=\"dash-total\">0</div>
+        </div>
+        <div class=\"metric-card\">
+          <div class=\"metric-label\">Prontas</div>
+          <div class=\"metric-value\" id=\"dash-ready\">0</div>
+        </div>
+        <div class=\"metric-card\">
+          <div class=\"metric-label\">Pendentes</div>
+          <div class=\"metric-value\" id=\"dash-pending\">0</div>
+        </div>
+        <div class=\"metric-card\">
+          <div class=\"metric-label\">Tempo Médio</div>
+          <div>
+            <span class=\"metric-value\" id=\"dash-avg-days\">0</span>
+            <span class=\"metric-unit\">dias</span>
+          </div>
+        </div>
+      </div>
+
+      <div class=\"chart-container\">
+        <div class=\"chart-title\">Mercadorias por Cidade</div>
+        <div class=\"chart-wrapper\">
+          <canvas id=\"chart-by-city\"></canvas>
+        </div>
+      </div>
+
+      <div class=\"chart-container\">
+        <div class=\"chart-title\">Status por Cidade</div>
+        <div class=\"chart-wrapper\">
+          <canvas id=\"chart-status-by-city\"></canvas>
+        </div>
+      </div>
+
+      <div class=\"ranking-container\">
+        <div class=\"chart-title\">Ranking de Eficiência por Cidade</div>
+        <ul class=\"ranking-list\" id=\"ranking-list\"></ul>
       </div>
     </div>
   </div>
@@ -1030,6 +1242,260 @@ html = f"""<!doctype html>
       sortRows();
       applyFilters();
     }})();
+
+    // === TAB SWITCHING ===
+    (function () {{
+      var tabButtons = document.querySelectorAll('.tab-button');
+      var tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(function (button) {{
+        button.addEventListener('click', function () {{
+          var targetTab = this.getAttribute('data-tab');
+
+          // Remove active from all buttons and contents
+          tabButtons.forEach(function (btn) {{
+            btn.classList.remove('active');
+          }});
+          tabContents.forEach(function (content) {{
+            content.classList.remove('active');
+          }});
+
+          // Add active to clicked button and corresponding content
+          this.classList.add('active');
+          var targetContent = document.getElementById(targetTab);
+          if (targetContent) {{
+            targetContent.classList.add('active');
+          }}
+
+          // If switching to dashboard, update charts
+          if (targetTab === 'dashboard') {{
+            updateDashboard();
+          }}
+        }});
+      }});
+    }})();
+
+    // === DASHBOARD ANALYTICS ===
+    function updateDashboard() {{
+      var table = document.querySelector("table");
+      if (!table) return;
+
+      var headers = table.querySelectorAll("thead th");
+      var cityIndex = -1;
+      var finIndex = -1;
+      var libIndex = -1;
+      var diasIndex = -1;
+
+      headers.forEach(function (th, idx) {{
+        var text = th.textContent.trim().toUpperCase();
+        if (text === "CIDADE") cityIndex = idx;
+        if (text === "FIN.") finIndex = idx;
+        if (text === "LIB.") libIndex = idx;
+        if (text === "DIAS") diasIndex = idx;
+      }});
+
+      var rows = Array.from(table.querySelectorAll("tbody tr"));
+      var visibleRows = rows.filter(function (row) {{
+        return row.style.display !== "none";
+      }});
+
+      // Calculate metrics
+      var total = visibleRows.length;
+      var ready = 0;
+      var pending = 0;
+      var totalDays = 0;
+      var daysCount = 0;
+
+      var cityStats = {{}};
+
+      visibleRows.forEach(function (row) {{
+        var cells = row.querySelectorAll("td");
+
+        // Count ready/pending
+        var finCell = cells[finIndex];
+        var libCell = cells[libIndex];
+        if (finCell && libCell) {{
+          var finText = finCell.textContent.trim().toUpperCase();
+          var libText = libCell.textContent.trim().toUpperCase();
+          if (finText === "OK" && libText === "SIM") {{
+            ready++;
+          }} else {{
+            pending++;
+          }}
+        }}
+
+        // Sum days
+        if (diasIndex >= 0) {{
+          var diasCell = cells[diasIndex];
+          if (diasCell) {{
+            var diasText = diasCell.textContent.trim();
+            var dias = parseInt(diasText);
+            if (!isNaN(dias)) {{
+              totalDays += dias;
+              daysCount++;
+            }}
+          }}
+        }}
+
+        // City stats
+        if (cityIndex >= 0) {{
+          var cityCell = cells[cityIndex];
+          if (cityCell) {{
+            var city = cityCell.textContent.trim();
+            if (!cityStats[city]) {{
+              cityStats[city] = {{ total: 0, ready: 0, pending: 0 }};
+            }}
+            cityStats[city].total++;
+            if (finCell && libCell) {{
+              var finText = finCell.textContent.trim().toUpperCase();
+              var libText = libCell.textContent.trim().toUpperCase();
+              if (finText === "OK" && libText === "SIM") {{
+                cityStats[city].ready++;
+              }} else {{
+                cityStats[city].pending++;
+              }}
+            }}
+          }}
+        }}
+      }});
+
+      var avgDays = daysCount > 0 ? Math.round(totalDays / daysCount) : 0;
+
+      // Update metric cards
+      document.getElementById('dash-total').textContent = total;
+      document.getElementById('dash-ready').textContent = ready;
+      document.getElementById('dash-pending').textContent = pending;
+      document.getElementById('dash-avg-days').textContent = avgDays;
+
+      // Prepare chart data
+      var cities = Object.keys(cityStats);
+      var cityColors = {{
+        'Araçatuba': '#2196F3',
+        'Prudente': '#4CAF50',
+        'Birigui': '#FF9800'
+      }};
+
+      // Chart 1: By city
+      var ctx1 = document.getElementById('chart-by-city');
+      if (ctx1) {{
+        if (window.chartByCity) {{
+          window.chartByCity.destroy();
+        }}
+        window.chartByCity = new Chart(ctx1, {{
+          type: 'bar',
+          data: {{
+            labels: cities,
+            datasets: [{{
+              label: 'Total de Mercadorias',
+              data: cities.map(function (city) {{ return cityStats[city].total; }}),
+              backgroundColor: cities.map(function (city) {{ return cityColors[city] || '#9E9E9E'; }})
+            }}]
+          }},
+          options: {{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {{
+              legend: {{ display: false }},
+              datalabels: {{
+                anchor: 'end',
+                align: 'top',
+                color: '#424242',
+                font: {{ weight: 'bold', size: 14 }}
+              }}
+            }},
+            scales: {{
+              y: {{ beginAtZero: true }}
+            }}
+          }},
+          plugins: [ChartDataLabels]
+        }});
+      }}
+
+      // Chart 2: Status by city (stacked)
+      var ctx2 = document.getElementById('chart-status-by-city');
+      if (ctx2) {{
+        if (window.chartStatusByCity) {{
+          window.chartStatusByCity.destroy();
+        }}
+        window.chartStatusByCity = new Chart(ctx2, {{
+          type: 'bar',
+          data: {{
+            labels: cities,
+            datasets: [
+              {{
+                label: 'Prontas',
+                data: cities.map(function (city) {{ return cityStats[city].ready; }}),
+                backgroundColor: '#4CAF50'
+              }},
+              {{
+                label: 'Pendentes',
+                data: cities.map(function (city) {{ return cityStats[city].pending; }}),
+                backgroundColor: '#FF5252'
+              }}
+            ]
+          }},
+          options: {{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {{
+              datalabels: {{
+                color: '#fff',
+                font: {{ weight: 'bold', size: 12 }},
+                formatter: function (value, context) {{
+                  var city = context.chart.data.labels[context.dataIndex];
+                  var total = cityStats[city].total;
+                  var percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                  return value > 0 ? percent + '%' : '';
+                }}
+              }}
+            }},
+            scales: {{
+              x: {{ stacked: true }},
+              y: {{ stacked: true, beginAtZero: true }}
+            }}
+          }},
+          plugins: [ChartDataLabels]
+        }});
+      }}
+
+      // Ranking
+      var ranking = cities.map(function (city) {{
+        var total = cityStats[city].total;
+        var ready = cityStats[city].ready;
+        var percent = total > 0 ? (ready / total) * 100 : 0;
+        return {{ city: city, percent: percent }};
+      }});
+      ranking.sort(function (a, b) {{ return b.percent - a.percent; }});
+
+      var rankingList = document.getElementById('ranking-list');
+      if (rankingList) {{
+        rankingList.innerHTML = '';
+        ranking.forEach(function (item, index) {{
+          var li = document.createElement('li');
+          li.className = 'ranking-item';
+
+          var position = document.createElement('div');
+          position.className = 'ranking-position';
+          if (index === 0) position.classList.add('first');
+          else if (index === 1) position.classList.add('second');
+          else if (index === 2) position.classList.add('third');
+          position.textContent = index + 1;
+
+          var city = document.createElement('div');
+          city.className = 'ranking-city';
+          city.textContent = item.city;
+
+          var percent = document.createElement('div');
+          percent.className = 'ranking-percentage';
+          percent.textContent = item.percent.toFixed(1) + '%';
+
+          li.appendChild(position);
+          li.appendChild(city);
+          li.appendChild(percent);
+          rankingList.appendChild(li);
+        }});
+      }}
+    }}
   </script>
 </body>
 </html>"""
