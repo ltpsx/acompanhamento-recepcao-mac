@@ -8,6 +8,7 @@ Pode ser executado manualmente ou via n8n/cron
 import subprocess
 import sys
 import io
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -18,6 +19,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 REPO_DIR = Path(__file__).parent
 SCRIPT_NAME = "gerar_acompanhamento.py"
 HTML_FILE = "Acompanhamento_recepcao_mac.html"
+TIMESTAMP_FILE = ".ultima_atualizacao.json"
 
 
 def log(message):
@@ -48,6 +50,16 @@ def run_command(command, description):
 def main():
     log("=== Iniciando atualização do Acompanhamento MAC ===")
 
+    # Mostrar informações sobre a última verificação
+    timestamp_path = REPO_DIR / TIMESTAMP_FILE
+    if timestamp_path.exists():
+        try:
+            timestamp_data = json.loads(timestamp_path.read_text(encoding="utf-8"))
+            log(f"Última verificação: {timestamp_data.get('ultima_verificacao', 'N/A')}")
+            log(f"Última atualização com mudanças: {timestamp_data.get('ultima_atualizacao', 'N/A')}")
+        except:
+            pass
+
     # 1. Gerar novo HTML
     success, output = run_command(
         f"python {SCRIPT_NAME}",
@@ -58,19 +70,24 @@ def main():
         sys.exit(1)
 
     # 2. Verificar se o HTML tem mudanças
-    success, status = run_command(
+    log("Verificando mudanças no HTML...")
+    result = subprocess.run(
         f"git diff --exit-code {HTML_FILE}",
-        "Verificando mudanças no HTML"
+        cwd=REPO_DIR,
+        shell=True,
+        capture_output=True
     )
 
     # Se exit code = 0, não há mudanças
-    if success:
-        log("Nenhuma mudança detectada no HTML. Nada a fazer.")
+    if result.returncode == 0:
+        log("✓ Nenhuma mudança detectada nos dados. Script rodou com sucesso.")
         sys.exit(0)
+    else:
+        log("✓ Mudanças detectadas nos dados, criando commit...")
 
-    # 3. Adicionar arquivos ao git
+    # 3. Adicionar arquivos ao git (HTML e JSON de timestamp)
     success, _ = run_command(
-        f"git add {HTML_FILE}",
+        f"git add {HTML_FILE} {TIMESTAMP_FILE}",
         "Adicionando arquivos ao Git"
     )
     if not success:

@@ -2,6 +2,7 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 import re
+import json
 
 FILES = {
     "Mac Araçatuba Recepção e Conferência.xlsx": "Araçatuba",
@@ -11,6 +12,7 @@ FILES = {
 
 OUTPUT_XLSX = "Acompanhamento_recepcao_mac.xlsx"
 OUTPUT_HTML = "Acompanhamento_recepcao_mac.html"
+TIMESTAMP_FILE = ".ultima_atualizacao.json"
 
 
 def normalize_header(value):
@@ -1033,5 +1035,13 @@ html = f"""<!doctype html>
 </html>"""
 
 Path(OUTPUT_HTML).write_text(html, encoding="utf-8")
+
+# Salvar timestamp da verificação
+timestamp_data = {
+    "ultima_verificacao": datetime.now().strftime('%d/%m/%Y às %H:%M'),
+    "ultima_atualizacao": datetime.now().strftime('%d/%m/%Y às %H:%M')
+}
+Path(TIMESTAMP_FILE).write_text(json.dumps(timestamp_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
 print(f"Gerado: {OUTPUT_XLSX}")
 print(f"Gerado: {OUTPUT_HTML}")
