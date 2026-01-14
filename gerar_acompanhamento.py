@@ -1343,7 +1343,7 @@ html = f"""<!doctype html>
           if (cityCell) {{
             var city = cityCell.textContent.trim();
             if (!cityStats[city]) {{
-              cityStats[city] = {{ total: 0, ready: 0, pending: 0 }};
+              cityStats[city] = {{ total: 0, ready: 0, pending: 0, totalDays: 0, daysCount: 0 }};
             }}
             cityStats[city].total++;
             if (finCell && libCell) {{
@@ -1353,6 +1353,18 @@ html = f"""<!doctype html>
                 cityStats[city].ready++;
               }} else {{
                 cityStats[city].pending++;
+              }}
+            }}
+            // Add days to city stats
+            if (diasIndex >= 0) {{
+              var diasCell = cells[diasIndex];
+              if (diasCell) {{
+                var diasText = diasCell.textContent.trim();
+                var dias = parseInt(diasText);
+                if (!isNaN(dias)) {{
+                  cityStats[city].totalDays += dias;
+                  cityStats[city].daysCount++;
+                }}
               }}
             }}
           }}
@@ -1375,14 +1387,14 @@ html = f"""<!doctype html>
         'Birigui': '#FF9800'
       }};
 
-      // Chart 1: By city
+      // Chart 1: By city (Donut/Pizza)
       var ctx1 = document.getElementById('chart-by-city');
       if (ctx1) {{
         if (window.chartByCity) {{
           window.chartByCity.destroy();
         }}
         window.chartByCity = new Chart(ctx1, {{
-          type: 'bar',
+          type: 'doughnut',
           data: {{
             labels: cities,
             datasets: [{{
@@ -1395,16 +1407,23 @@ html = f"""<!doctype html>
             responsive: true,
             maintainAspectRatio: false,
             plugins: {{
-              legend: {{ display: false }},
+              legend: {{
+                display: true,
+                position: 'bottom',
+                labels: {{
+                  padding: 15,
+                  font: {{ size: 13 }}
+                }}
+              }},
               datalabels: {{
-                anchor: 'end',
-                align: 'top',
-                color: '#424242',
-                font: {{ weight: 'bold', size: 14 }}
+                color: '#fff',
+                font: {{ weight: 'bold', size: 16 }},
+                formatter: function (value, context) {{
+                  var sum = context.dataset.data.reduce(function (a, b) {{ return a + b; }}, 0);
+                  var percent = Math.round((value / sum) * 100);
+                  return value + '\\n(' + percent + '%)';
+                }}
               }}
-            }},
-            scales: {{
-              y: {{ beginAtZero: true }}
             }}
           }},
           plugins: [ChartDataLabels]
@@ -1458,14 +1477,14 @@ html = f"""<!doctype html>
         }});
       }}
 
-      // Ranking
+      // Ranking - Por média de dias (menor é melhor)
       var ranking = cities.map(function (city) {{
-        var total = cityStats[city].total;
-        var ready = cityStats[city].ready;
-        var percent = total > 0 ? (ready / total) * 100 : 0;
-        return {{ city: city, percent: percent }};
+        var stats = cityStats[city];
+        var avgDays = stats.daysCount > 0 ? stats.totalDays / stats.daysCount : 0;
+        return {{ city: city, avgDays: avgDays }};
       }});
-      ranking.sort(function (a, b) {{ return b.percent - a.percent; }});
+      // Ordenar do menor para o maior (mais eficiente primeiro)
+      ranking.sort(function (a, b) {{ return a.avgDays - b.avgDays; }});
 
       var rankingList = document.getElementById('ranking-list');
       if (rankingList) {{
@@ -1476,22 +1495,23 @@ html = f"""<!doctype html>
 
           var position = document.createElement('div');
           position.className = 'ranking-position';
-          if (index === 0) position.classList.add('first');
-          else if (index === 1) position.classList.add('second');
-          else if (index === 2) position.classList.add('third');
+          // Usar cor da cidade em vez de medalhas
+          var cityColor = cityColors[item.city] || '#9E9E9E';
+          position.style.backgroundColor = cityColor;
+          position.style.color = '#ffffff';
           position.textContent = index + 1;
 
           var city = document.createElement('div');
           city.className = 'ranking-city';
           city.textContent = item.city;
 
-          var percent = document.createElement('div');
-          percent.className = 'ranking-percentage';
-          percent.textContent = item.percent.toFixed(1) + '%';
+          var days = document.createElement('div');
+          days.className = 'ranking-percentage';
+          days.textContent = item.avgDays.toFixed(1) + ' dias';
 
           li.appendChild(position);
           li.appendChild(city);
-          li.appendChild(percent);
+          li.appendChild(days);
           rankingList.appendChild(li);
         }});
       }}
