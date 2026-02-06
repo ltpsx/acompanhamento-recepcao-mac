@@ -3,6 +3,10 @@ from pathlib import Path
 from datetime import datetime
 import re
 import json
+import time
+import shutil
+import tempfile
+import os
 
 FILES = {
     "Mac Araçatuba Recepção e Conferência.xlsx": "Araçatuba",
@@ -158,10 +162,51 @@ def format_date(series):
     return series.map(fix)
 
 
+def copy_excel_to_temp(file_name):
+    """Copia o arquivo Excel para pasta temporária
+
+    Solução para quando arquivo está aberto no OneDrive por outras pessoas/máquinas
+    """
+    try:
+        # Criar pasta temp se não existir
+        temp_dir = Path(tempfile.gettempdir()) / "mac_recepcao_temp"
+        temp_dir.mkdir(exist_ok=True)
+
+        # Nome do arquivo temporário
+        temp_file = temp_dir / Path(file_name).name
+
+        # Tentar copiar
+        print(f"Copiando {file_name} para pasta temporaria...")
+        shutil.copy2(file_name, temp_file)
+        print(f"Arquivo copiado com sucesso")
+
+        return str(temp_file)
+    except Exception as e:
+        print(f"AVISO: Erro ao copiar arquivo: {e}")
+        print(f"  Tentando abrir arquivo original...")
+        return file_name
+
+
+def open_excel_safe(file_name):
+    """Abre Excel de forma segura, usando cópia temporária se necessário.
+    Retorna tupla (ExcelFile, caminho_usado) para que leituras subsequentes usem o mesmo caminho.
+    """
+    # Primeiro tenta copiar para temp (sempre funciona, mesmo se arquivo estiver aberto)
+    temp_file = copy_excel_to_temp(file_name)
+
+    try:
+        return pd.ExcelFile(temp_file), temp_file
+    except Exception as e:
+        print(f"ERRO: Nao foi possivel abrir {temp_file}: {e}")
+        raise
+
+
 frames = []
+temp_files_to_cleanup = []
+
 for file_name, city in FILES.items():
-    # Obter todas as guias do arquivo
-    xls = pd.ExcelFile(file_name)
+    # Abrir arquivo (usa cópia temporária automaticamente)
+    xls, safe_path = open_excel_safe(file_name)
     sheet_names = xls.sheet_names
 
     valid_sheets = [s for s in sheet_names if is_valid_sheet(s)]
@@ -174,7 +219,7 @@ for file_name, city in FILES.items():
 
     for sheet_name in valid_sheets:
         try:
-            frames.append(extract_table(file_name, city, sheet_name))
+            frames.append(extract_table(safe_path, city, sheet_name))
         except Exception as e:
             print(f"Erro ao processar guia '{sheet_name}' em {file_name}: {e}")
 
