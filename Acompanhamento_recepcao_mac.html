@@ -596,7 +596,7 @@
       </div>
       <div class="last-update">
         <span class="material-icons">schedule</span>
-        <span>Atualizado em <span class="update-time">01/08/2026 às 10:30</span></span>
+        <span>Atualizado em <span class="update-time">01/08/2026 às 10:34</span></span>
       </div>
     </header>
 
@@ -9687,9 +9687,9 @@
       <td>167736</td>
       <td>30/07/2026</td>
       <td>BRUDOVAN PNEUS LTDA - SP</td>
+      <td>ok</td>
       <td></td>
-      <td></td>
-      <td></td>
+      <td>31/07/2026</td>
     </tr>
   </tbody>
 </table>
@@ -10394,7 +10394,7 @@
         var monthTotals = {};
         rows.forEach(function (row) {
           var key = row.getAttribute("data-month");
-          if (!key) return;
+          if (!key || key < "2026-01") return;
           monthTotals[key] = (monthTotals[key] || 0) + 1;
         });
 

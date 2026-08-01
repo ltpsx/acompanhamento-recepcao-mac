@@ -993,6 +993,13 @@ html = f"""<!doctype html>
         </div>
       </div>
 
+      <div class=\"chart-container\">
+        <div class=\"chart-title\">Mercadorias Recebidas por Mês</div>
+        <div class=\"chart-wrapper\">
+          <canvas id=\"chart-by-month\"></canvas>
+        </div>
+      </div>
+
       <div class=\"ranking-container\">
         <div class=\"chart-title\">Ranking de Eficiência por Cidade</div>
         <ul class=\"ranking-list\" id=\"ranking-list\"></ul>
@@ -1611,6 +1618,58 @@ html = f"""<!doctype html>
             scales: {{
               x: {{ stacked: true }},
               y: {{ stacked: true, beginAtZero: true }}
+            }}
+          }},
+          plugins: [ChartDataLabels]
+        }});
+      }}
+
+      // Chart 3: Total por mês (todos os meses, independente da aba selecionada)
+      var ctx3 = document.getElementById('chart-by-month');
+      if (ctx3) {{
+        if (window.chartByMonth) {{
+          window.chartByMonth.destroy();
+        }}
+
+        var monthNamesShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        var monthTotals = {{}};
+        rows.forEach(function (row) {{
+          var key = row.getAttribute("data-month");
+          if (!key || key < "2026-01") return;
+          monthTotals[key] = (monthTotals[key] || 0) + 1;
+        }});
+
+        var monthKeysSorted = Object.keys(monthTotals).sort(); // ordem cronológica
+        var monthLabelsChart = monthKeysSorted.map(function (key) {{
+          var parts = key.split("-");
+          return monthNamesShort[parseInt(parts[1], 10) - 1] + "/" + parts[0];
+        }});
+        var monthDataChart = monthKeysSorted.map(function (key) {{ return monthTotals[key]; }});
+
+        window.chartByMonth = new Chart(ctx3, {{
+          type: 'bar',
+          data: {{
+            labels: monthLabelsChart,
+            datasets: [{{
+              label: 'Mercadorias recebidas',
+              data: monthDataChart,
+              backgroundColor: '#1976D2'
+            }}]
+          }},
+          options: {{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {{
+              legend: {{ display: false }},
+              datalabels: {{
+                color: '#212121',
+                anchor: 'end',
+                align: 'top',
+                font: {{ weight: 'bold', size: 12 }}
+              }}
+            }},
+            scales: {{
+              y: {{ beginAtZero: true }}
             }}
           }},
           plugins: [ChartDataLabels]
