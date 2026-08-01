@@ -678,6 +678,41 @@ html = f"""<!doctype html>
       display: block;
     }}
 
+    /* Abas de mês */
+    .month-tabs {{
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }}
+
+    .month-tab-button {{
+      flex: 0 0 auto;
+      padding: 8px 18px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 20px;
+      color: #616161;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Roboto', sans-serif;
+      white-space: nowrap;
+    }}
+
+    .month-tab-button:hover {{
+      background: #eeeeee;
+      color: #424242;
+    }}
+
+    .month-tab-button.active {{
+      background: #1976D2;
+      border-color: #1976D2;
+      color: #ffffff;
+    }}
+
     /* Dashboard */
     .dashboard-grid {{
       display: grid;
@@ -828,6 +863,8 @@ html = f"""<!doctype html>
     </div>
 
     <div id=\"dados\" class=\"tab-content active\">
+    <div id=\"month-tabs\" class=\"month-tabs\"></div>
+
     <div class=\"controls\">
       <div class=\"search-box\">
         <span class=\"material-icons\">search</span>
@@ -1083,6 +1120,62 @@ html = f"""<!doctype html>
         row.appendChild(statusCell);
       }});
 
+      // === ABAS DE MÊS ===
+      var monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      var monthTabsContainer = document.getElementById("month-tabs");
+      var selectedMonth = null;
+
+      function monthKeyFromDate(dateText) {{
+        if (!dateText) return null;
+        var parts = dateText.split("/");
+        if (parts.length !== 3) return null;
+        return parts[2] + "-" + parts[1].padStart(2, "0");
+      }}
+
+      rows.forEach(function (row) {{
+        row.setAttribute("data-month", monthKeyFromDate(row.getAttribute("data-date")) || "");
+      }});
+
+      var monthKeys = [];
+      rows.forEach(function (row) {{
+        var key = row.getAttribute("data-month");
+        // Ignora datas anteriores a Jan/2026 (ex.: erros de digitação de ano)
+        if (key && key >= "2026-01" && monthKeys.indexOf(key) === -1) {{
+          monthKeys.push(key);
+        }}
+      }});
+      monthKeys.sort(function (a, b) {{ return b.localeCompare(a); }}); // mais recente primeiro
+
+      var todayForMonth = new Date();
+      var currentMonthKey = todayForMonth.getFullYear() + "-" + String(todayForMonth.getMonth() + 1).padStart(2, "0");
+      selectedMonth = monthKeys.indexOf(currentMonthKey) !== -1 ? currentMonthKey : (monthKeys[0] || null);
+
+      function monthLabel(key) {{
+        var parts = key.split("-");
+        var year = parts[0];
+        var month = parseInt(parts[1], 10);
+        return monthNames[month - 1] + "/" + year;
+      }}
+
+      function renderMonthTabs() {{
+        if (!monthTabsContainer) return;
+        monthTabsContainer.innerHTML = "";
+        monthKeys.forEach(function (key) {{
+          var btn = document.createElement("button");
+          btn.className = "month-tab-button" + (key === selectedMonth ? " active" : "");
+          btn.textContent = monthLabel(key);
+          btn.setAttribute("data-month-key", key);
+          btn.addEventListener("click", function () {{
+            selectedMonth = key;
+            renderMonthTabs();
+            applyFilters();
+          }});
+          monthTabsContainer.appendChild(btn);
+        }});
+      }}
+
+      renderMonthTabs();
+
       // Controles de filtro e ordenação
       var searchInput = document.getElementById("search-input");
       var cityFilter = document.getElementById("city-filter");
@@ -1220,6 +1313,7 @@ html = f"""<!doctype html>
           var dateText = row.getAttribute("data-date");
           var fornecedor = row.getAttribute("data-fornecedor");
           var nf = row.getAttribute("data-nf");
+          var month = row.getAttribute("data-month");
 
           var searchMatch = searchValue === "" ||
                            fornecedor.indexOf(searchValue) !== -1 ||
@@ -1229,8 +1323,9 @@ html = f"""<!doctype html>
                            (statusValue === "READY" && ready === "true") ||
                            (statusValue === "PENDING" && ready === "false");
           var dateMatch = isDateInRange(dateText, dateValue, startDate, endDate);
+          var monthMatch = !selectedMonth || month === selectedMonth;
 
-          if (searchMatch && cityMatch && statusMatch && dateMatch) {{
+          if (searchMatch && cityMatch && statusMatch && dateMatch && monthMatch) {{
             row.style.display = "";
           }} else {{
             row.style.display = "none";

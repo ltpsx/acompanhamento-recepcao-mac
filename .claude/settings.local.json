@@ -36,7 +36,10 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(git check-ignore *)",
-      "Bash(rm -f tmpclaude-*-cwd)"
+      "Bash(rm -f tmpclaude-*-cwd)",
+      "Bash(python gerar_acompanhamento.py)",
+      "Bash(python -c ' *)",
+      "Bash(pkill -f \"http.server 8791\")"
     ]
   }
 }

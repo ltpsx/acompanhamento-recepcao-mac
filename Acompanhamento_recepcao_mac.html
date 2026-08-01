@@ -596,7 +596,7 @@
       </div>
       <div class="last-update">
         <span class="material-icons">schedule</span>
-        <span>Atualizado em <span class="update-time">01/08/2026 às 10:00</span></span>
+        <span>Atualizado em <span class="update-time">01/08/2026 às 10:06</span></span>
       </div>
     </header>
 
@@ -6268,7 +6268,7 @@
       <td>03/07/2026</td>
       <td>BR MOTORSPORT</td>
       <td>OK</td>
-      <td></td>
+      <td>SIM</td>
       <td>07/07/2026</td>
     </tr>
     <tr>
@@ -6430,7 +6430,7 @@
       <td>22/07/2026</td>
       <td>MONTANNA</td>
       <td>OK</td>
-      <td></td>
+      <td>SIM</td>
       <td>24/07/2026</td>
     </tr>
     <tr>
@@ -9898,7 +9898,8 @@
       var monthKeys = [];
       rows.forEach(function (row) {
         var key = row.getAttribute("data-month");
-        if (key && monthKeys.indexOf(key) === -1) {
+        // Ignora datas anteriores a Jan/2026 (ex.: erros de digitação de ano)
+        if (key && key >= "2026-01" && monthKeys.indexOf(key) === -1) {
           monthKeys.push(key);
         }
       });
