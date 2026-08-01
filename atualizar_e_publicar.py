@@ -9,6 +9,7 @@ import subprocess
 import sys
 import io
 import json
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -20,12 +21,21 @@ REPO_DIR = Path(__file__).parent
 SCRIPT_NAME = "gerar_acompanhamento.py"
 HTML_FILE = "Acompanhamento_recepcao_mac.html"
 TIMESTAMP_FILE = ".ultima_atualizacao.json"
+LOG_FILE = REPO_DIR / "atualizar_e_publicar.log"
 
 
 def log(message):
-    """Imprime mensagem com timestamp"""
+    """Imprime mensagem com timestamp e salva em arquivo"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{timestamp}] {message}")
+    log_message = f"[{timestamp}] {message}"
+    print(log_message)
+
+    # Também salva em arquivo para diagnóstico
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(log_message + "\n")
+    except:
+        pass  # Não falhar se não conseguir escrever log
 
 
 def run_command(command, description):
@@ -59,6 +69,36 @@ def main():
             log(f"Última atualização com mudanças: {timestamp_data.get('ultima_atualizacao', 'N/A')}")
         except:
             pass
+
+    # 0. Sincronizar com remote antes de começar (pull)
+    log("Sincronizando com repositório remoto...")
+    result = subprocess.run(
+        "git pull --rebase",
+        cwd=REPO_DIR,
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        # Se falhar o pull, pode ser porque não há conexão ou não há mudanças
+        error_lower = result.stderr.lower()
+        log(f"⚠ Pull falhou (pode ser normal): {result.stderr.strip()}")
+
+        # Verifica se é erro de conexão
+        if "could not resolve host" in error_lower or "failed to connect" in error_lower:
+            log("⚠ Sem conexão com GitHub. Continuando mesmo assim...")
+        # Verifica se é porque tem mudanças locais (não é problema)
+        elif "unstaged changes" in error_lower or "uncommitted changes" in error_lower:
+            log("✓ Mudanças locais detectadas, continuando normalmente...")
+        # Verifica se é conflito real
+        elif "conflict" in error_lower:
+            log("✗ ERRO: Conflito detectado no repositório!")
+            log("Execute 'git status' e resolva os conflitos manualmente.")
+            sys.exit(1)
+        else:
+            log("⚠ Erro desconhecido no pull, mas continuando...")
+    else:
+        log("✓ Sincronização bem-sucedida")
 
     # 1. Gerar novo HTML
     success, output = run_command(
@@ -104,13 +144,34 @@ def main():
         log("Erro ao criar commit. Abortando.")
         sys.exit(1)
 
-    # 5. Fazer push
-    success, _ = run_command(
-        "git push",
-        "Enviando para GitHub"
-    )
-    if not success:
-        log("Erro ao fazer push. Abortando.")
+    # 5. Fazer push com retry
+    max_retries = 3
+    retry_count = 0
+    push_success = False
+
+    while retry_count < max_retries and not push_success:
+        if retry_count > 0:
+            log(f"Tentativa {retry_count + 1} de {max_retries}...")
+            # Tenta sincronizar novamente antes do retry
+            subprocess.run("git pull --rebase", cwd=REPO_DIR, shell=True, capture_output=True)
+
+        success, error_msg = run_command(
+            "git push",
+            "Enviando para GitHub"
+        )
+
+        if success:
+            push_success = True
+        else:
+            retry_count += 1
+            if retry_count < max_retries:
+                log(f"⚠ Tentativa falhou. Tentando novamente em 2 segundos...")
+                time.sleep(2)
+
+    if not push_success:
+        log("✗ Erro ao fazer push após múltiplas tentativas.")
+        log("⚠ O commit foi criado localmente mas não foi enviado ao GitHub.")
+        log("Execute 'git push' manualmente quando houver conexão.")
         sys.exit(1)
 
     log("=== Atualização concluída com sucesso! ===")
