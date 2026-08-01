@@ -30,4 +30,4 @@ desktop.ini
 *.log
 
 # Arquivos temporários do Claude
-tmpclaude-*-cwd/
+tmpclaude-*-cwd

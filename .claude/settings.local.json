@@ -16,7 +16,27 @@
       "Bash(gh run list:*)",
       "Bash(ls:*)",
       "Bash(git checkout:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(start Acompanhamento_recepcao_mac.html)",
+      "Bash(start \"\" \"C:\\\\Users\\\\compr\\\\OneDrive\\\\Recepção e Conferência de Mercadorias\\\\Acompanhamento_recepcao_mac.html\")",
+      "Bash(findstr:*)",
+      "Bash(move:*)",
+      "Bash(copy:*)",
+      "Bash(git config:*)",
+      "Bash(cmd /c \"gh run list --limit 10\")",
+      "Bash(where:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.githubstatus.com)",
+      "Bash(tasklist)",
+      "Bash(rm -f \".git/index.lock\" && echo \"lock removed\" && git status --short | grep -v tmpclaude)",
+      "Bash(python atualizar_e_publicar.py)",
+      "Bash(schtasks /query /fo LIST /v)",
+      "Bash(schtasks /query /fo LIST)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git check-ignore *)",
+      "Bash(rm -f tmpclaude-*-cwd)"
     ]
   }
 }
